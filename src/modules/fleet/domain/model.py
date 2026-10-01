@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 @dataclass(frozen=True)
 class Imsi:
@@ -35,3 +36,34 @@ class DroneId:
     def __post_init__(self):
         if not 3<= len(self.value) <= 32 or not self.value.isascii() or not self.value.replace("-", "").isalnum():
             raise ValueError("Drone ID must be a 3-32 character ASCII string containing only alphanumeric characters and hyphens.")
+
+class DroneStatus(Enum):
+    ACTIVE = "active"
+    RETIRED = "retired"
+    SUSPENDED = "suspended"
+
+@dataclass(eq=False)
+class Drone:
+    droneId: DroneId
+    imsi: Imsi
+    iccid: Iccid
+    customer_id: str
+    status: DroneStatus
+
+    @classmethod
+    def register(cls, id: DroneId, imsi: Imsi, iccid: Iccid, customer_id: str) -> 'Drone':
+        return cls(
+            droneId=id,
+            imsi=imsi,
+            iccid=iccid,
+            customer_id=customer_id,
+            status=DroneStatus.ACTIVE)
+
+    def is_eligible(self,) -> bool:
+        return self.status == DroneStatus.ACTIVE
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Drone):
+            return NotImplemented
+        return (self.droneId == other.droneId and
+                self.customer_id == other.customer_id)
