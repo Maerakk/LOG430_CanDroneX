@@ -44,7 +44,7 @@ class DroneStatus(Enum):
 
 @dataclass(eq=False)
 class Drone:
-    droneId: DroneId
+    drone_id: DroneId
     imsi: Imsi
     iccid: Iccid
     customer_id: str
@@ -53,7 +53,7 @@ class Drone:
     @classmethod
     def register(cls, id: DroneId, imsi: Imsi, iccid: Iccid, customer_id: str) -> 'Drone':
         return cls(
-            droneId=id,
+            drone_id=id,
             imsi=imsi,
             iccid=iccid,
             customer_id=customer_id,
@@ -65,5 +65,5 @@ class Drone:
     def __eq__(self, other) -> bool:
         if not isinstance(other, Drone):
             return NotImplemented
-        return (self.droneId == other.droneId and
+        return (self.drone_id == other.drone_id and
                 self.customer_id == other.customer_id)
