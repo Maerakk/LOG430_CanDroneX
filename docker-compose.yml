@@ -6,10 +6,10 @@ services:
       MYSQL_USER: ${MYSQL_USER:-candronex}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-candronex}
     ports:
-      - "3310:3306"                          # 3307 sur ton poste, pour éviter un conflit avec un MySQL déjà installé
+      - "3310:3306"
     volumes:
-      - db-data:/var/lib/mysql               # les données survivent aux redémarrages
-      - ./db/init:/docker-entrypoint-initdb.d:ro   # scripts exécutés au tout premier démarrage
+      - db-data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
