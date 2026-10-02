@@ -2,7 +2,7 @@ import logging
 
 from src.modules.fleet.domain.model import DroneId, Imsi, Iccid, Drone
 from src.modules.fleet.domain.ports import DroneRepository
-from src.modules.fleet.domain.errors import DroneAlreadyRegisteredError, NetworkIdentifierError, DroneNotFoundError
+from src.modules.fleet.domain.errors import DroneAlreadyRegisteredError, NetworkIdentifierError
 
 logger = logging.getLogger(__name__)
 

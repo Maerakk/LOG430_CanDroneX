@@ -2,7 +2,7 @@ import pytest
 from src.modules.fleet.application.services import RegisterDrone
 from src.modules.fleet.domain.model import DroneStatus
 from src.modules.fleet.domain.errors import DroneAlreadyRegisteredError, NetworkIdentifierError
-from tests.unit.fakes import FakeDroneRepository
+from src.modules.fleet.infrastructure.in_memory_repository import InMemoryDroneRepository
 
 IMSI_1 = "999701234567890" # 999-70 used on all the project
 ICCID_1 = "89112233445566778899"
@@ -15,7 +15,7 @@ CUSTOMER_2 = "CUST-002"
 DRONE_1 = "DRONE-0001"
 
 def create_service() -> RegisterDrone:
-    return RegisterDrone(FakeDroneRepository())
+    return RegisterDrone(InMemoryDroneRepository())
 
 def test_register_drone():
     service = create_service()
@@ -26,7 +26,7 @@ def test_register_drone_already_registered():
     service = create_service()
     drone = service.execute(DRONE_1, IMSI_1, ICCID_1, CUSTOMER_1)
     with pytest.raises(DroneAlreadyRegisteredError):
-        service.execute(DRONE_1, IMSI_2, ICCID_2, CUSTOMER_2)
+        service.execute(DRONE_1, IMSI_2, ICCID_2, CUSTOMER_1)
 
 def test_same_drone_registered_different_customers():
     service = create_service()

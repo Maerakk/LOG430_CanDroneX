@@ -1,8 +1,8 @@
-from src.shared.errors import ConflictError, NotfoundError
+from src.shared.errors import ConflictError, NotFoundError
 
 class DroneAlreadyRegisteredError(ConflictError):
-    """Exception raised when a drone with the same IMSI or ICCID is already registered."""
-    def __init__(self, message="Drone with the same IMSI or ICCID is already registered"):
+    """This customer has already registered a drone with this drone ID."""
+    def __init__(self, message="A drone with this ID is already registered for this customer"):
         super().__init__(message)
 
 class NetworkIdentifierError(ConflictError):
@@ -10,7 +10,8 @@ class NetworkIdentifierError(ConflictError):
     def __init__(self, message="Network identifier conflict"):
         super().__init__(message)
 
-class DroneNotFoundError(NotfoundError):
+class DroneNotFoundError(NotFoundError):
     """Exception raised when a drone is not found."""
     def __init__(self, message="Drone not found"):
         super().__init__(message)
+

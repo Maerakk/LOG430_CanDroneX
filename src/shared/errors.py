@@ -4,7 +4,7 @@ class DomainError(Exception):
         self.message = message
         super().__init__(self.message)
 
-class NotfoundError(DomainError):
+class NotFoundError(DomainError):
     """Exception raised when a requested resource is not found."""
     def __init__(self, message="Resource not found"):
         self.message = message
@@ -15,3 +15,10 @@ class ConflictError(DomainError):
     def __init__(self, message="Resource conflict"):
         self.message = message
         super().__init__(self.message)
+
+class RuleViolationError(DomainError):
+    """Exception raised when a business rule is violated."""
+    def __init__(self, message="Business rule violation"):
+        self.message = message
+        super().__init__(self.message)
+

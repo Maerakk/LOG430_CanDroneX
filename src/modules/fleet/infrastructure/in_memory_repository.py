@@ -1,7 +1,7 @@
 from src.modules.fleet.domain.model import Imsi, Iccid, DroneId, Drone
 from src.modules.fleet.domain.ports import DroneRepository
 
-class FakeDroneRepository(DroneRepository):
+class InMemoryDroneRepository(DroneRepository):
     def __init__(self):
         self.drones: dict [tuple[str,str], Drone] = {}
         # Dictionary that fakes a database, with key as (drone_id, customer_id) and value as Drone object
