@@ -1,8 +1,10 @@
 import logging
 from flask import Flask
 
+from src.modules.catalog.infrastructure.sql_repository import SqlServiceSpecificationRepository
 from src.modules.orders.application.services import PlaceServiceOrder, GetServiceOrder
 from src.modules.orders.infrastructure.in_memory_repository import InMemoryServiceOrderRepository
+from src.modules.orders.infrastructure.sql_repository import SqlServiceOrderRepository
 from src.modules.orders.web.routes import create_orders_blueprint
 from src.shared.problem import register_error_handlers
 
@@ -15,6 +17,9 @@ from src.modules.catalog.api import CatalogFacade
 from src.modules.catalog.domain.model import ServiceSpecification, ServiceType, ServiceCharacteristics
 from src.modules.catalog.infrastructure.in_memory_repository import InMemoryServiceSpecificationRepository
 
+from src.shared.db import SessionFactory
+from src.modules.fleet.infrastructure.sql_repository import SqlDroneRepository
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -25,45 +30,13 @@ def create_app() -> Flask:
     # Register error handlers
     register_error_handlers(app)
 
-    # Setup in-memory repositories
-    drone_repository = InMemoryDroneRepository()
-    catalog_repository = InMemoryServiceSpecificationRepository()
-
-    # Pre-populate catalog with some service specifications
-    catalog_repository.add_service_specification(
-        ServiceSpecification(
-            service_name="C&C Connectivity",
-            service_type=ServiceType.C2,
-            characteristics=ServiceCharacteristics(
-                sst=2,
-                sd="000001",
-                dnn="c2",
-                five_qi=7,
-                arp=2,
-                ambr_uplink_mbps=20,
-                ambr_downlink_mbps=20
-            )
-        )
-    )
-    catalog_repository.add_service_specification(
-        ServiceSpecification(
-            service_name="Imagery Service",
-            service_type=ServiceType.IMAGERY,
-            characteristics=ServiceCharacteristics(
-                sst=1,
-                sd="000002",
-                dnn="imagery",
-                five_qi=9,
-                arp=8,
-                ambr_uplink_mbps=500,
-                ambr_downlink_mbps=100
-            )
-        )
-    )
+    # Setup SQL repositories
+    drone_repository = SqlDroneRepository(SessionFactory)
+    catalog_repository = SqlServiceSpecificationRepository(SessionFactory)
+    order_repository = SqlServiceOrderRepository(SessionFactory)
 
     fleet_facade = FleetFacade(drone_repository)
     catalog_facade = CatalogFacade(catalog_repository)
-    order_repository = InMemoryServiceOrderRepository()
 
     # Register blueprints
     app.register_blueprint(create_orders_blueprint(
@@ -76,4 +49,4 @@ def create_app() -> Flask:
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(port = 5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)

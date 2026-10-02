@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_USER: ${MYSQL_USER:-candronex}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-candronex}
+    ports:
+      - "3310:3306"                          # 3307 sur ton poste, pour éviter un conflit avec un MySQL déjà installé
+    volumes:
+      - db-data:/var/lib/mysql               # les données survivent aux redémarrages
+      - ./db/init:/docker-entrypoint-initdb.d:ro   # scripts exécutés au tout premier démarrage
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 10
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: mysql+pymysql://candronex:candronex@db:3306
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
