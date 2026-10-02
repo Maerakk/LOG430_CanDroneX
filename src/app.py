@@ -1,24 +1,21 @@
 import logging
 from flask import Flask
 
+from src.modules.catalog.api import CatalogFacade
 from src.modules.catalog.infrastructure.sql_repository import SqlServiceSpecificationRepository
+
 from src.modules.orders.application.services import PlaceServiceOrder, GetServiceOrder
-from src.modules.orders.infrastructure.in_memory_repository import InMemoryServiceOrderRepository
 from src.modules.orders.infrastructure.sql_repository import SqlServiceOrderRepository
 from src.modules.orders.web.routes import create_orders_blueprint
-from src.shared.problem import register_error_handlers
 
 from src.modules.fleet.api import FleetFacade
 from src.modules.fleet.application.services import RegisterDrone
-from src.modules.fleet.infrastructure.in_memory_repository import InMemoryDroneRepository
 from src.modules.fleet.web.routes import create_fleet_blueprint
-
-from src.modules.catalog.api import CatalogFacade
-from src.modules.catalog.domain.model import ServiceSpecification, ServiceType, ServiceCharacteristics
-from src.modules.catalog.infrastructure.in_memory_repository import InMemoryServiceSpecificationRepository
-
-from src.shared.db import SessionFactory
 from src.modules.fleet.infrastructure.sql_repository import SqlDroneRepository
+
+
+from src.shared.problem import register_error_handlers
+from src.shared.db import SessionFactory
 
 
 def create_app() -> Flask:
