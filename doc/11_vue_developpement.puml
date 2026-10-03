@@ -1,0 +1,56 @@
+@startuml
+!pragma layout smetana
+title Vue Développement - Organisation du code
+skinparam packageStyle folder
+
+package "src" {
+  file "app.py\n(racine de composition)" as app
+  folder "shared" as shared
+
+  package "modules" as modules {
+    package "fleet" {
+      file "api.py" as fapi #LightGray
+      folder "web" as fweb
+      folder "application" as fappl
+      folder "domain" as fdom
+      folder "infrastructure" as finf
+    }
+    package "catalog" {
+      file "api.py" as capi #LightGray
+      folder "domain" as cdom
+      folder "infrastructure" as cinf
+    }
+    package "orders" {
+      folder "web" as oweb
+      folder "application" as oappl
+      folder "domain" as odom
+      folder "infrastructure" as oinf
+    }
+  }
+}
+
+package "tests" {
+  folder "unit" as tunit
+  folder "integration" as tint
+}
+
+fweb --> fappl
+fappl --> fdom
+finf ..> fdom : implémente les ports
+fapi --> fdom
+
+cinf ..> cdom : implémente les ports
+capi --> cdom
+
+oweb --> oappl
+oappl --> odom
+oinf ..> odom : implémente les ports
+oappl --> fapi
+oappl --> capi
+
+app ..> modules : instancie et injecte
+modules ..> shared
+
+tunit ..> modules
+tint ..> modules
+@enduml

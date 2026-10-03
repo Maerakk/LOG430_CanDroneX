@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+title Structure du module orders
+skinparam componentStyle rectangle
+
+package "orders" {
+  package "web" {
+    component "routes.py" <<contrôleur>> as routes
+  }
+  package "application" {
+    component "PlaceServiceOrder\nGetServiceOrder" <<service applicatif>> as app
+  }
+  package "domain" {
+    component "ServiceOrder\nServiceOrderItem\nItemState" <<modèle>> as model
+    rectangle "ServiceOrderRepository" <<port>> as port #LightYellow
+  }
+  package "infrastructure" {
+    component "SqlServiceOrderRepository" <<adaptateur>> as sql #LightBlue
+    component "InMemoryServiceOrderRepository" <<adaptateur>> as mem #LightBlue
+  }
+}
+
+component "FleetFacade\n(fleet/api.py)" <<façade>> as fleet #WhiteSmoke
+component "CatalogFacade\n(catalog/api.py)" <<façade>> as catalog #WhiteSmoke
+database "schéma orders" as db
+
+routes --> app
+app --> model
+app --> port : utilise
+sql ..|> port : implémente
+mem ..|> port : implémente
+sql --> db
+app --> fleet
+app --> catalog
+
+legend right
+  Jaune : port, défini par le domaine
+  Bleu : adaptateurs, dans l'infrastructure
+  Gris : façades des autres modules
+  Pointillé à tête creuse : implémente
+endlegend
+@enduml

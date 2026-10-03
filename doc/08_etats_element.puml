@@ -1,0 +1,19 @@
+@startuml
+!pragma layout smetana
+title Cycle de vie d'un élément de commande
+
+[*] --> PENDING : commande créée\n(implémenté)
+PENDING --> ACTIVATING : activation démarrée
+ACTIVATING --> ACTIVE : réseau configuré
+ACTIVATING --> FAILED : erreur, délai,\nréseau injoignable
+FAILED --> ACTIVATING : reprise (UC-10)
+PENDING --> CANCELLED : annulation (UC-15)
+ACTIVE --> [*]
+CANCELLED --> [*]
+
+note right of ACTIVATING
+  Transitions modélisées,
+  réalisées par le module
+  Activation (UC-06)
+end note
+@enduml

@@ -1,0 +1,15 @@
+@startuml
+!pragma layout smetana
+title Contexte technique
+
+actor "Client B2B" as client
+rectangle "CanDroneX" {
+  rectangle "Application" as app
+  database "MySQL" as db
+}
+rectangle "Coeur 5G\n(Phase 2)" as core
+
+client --> app : API REST
+app --> db
+app ..> core
+@enduml

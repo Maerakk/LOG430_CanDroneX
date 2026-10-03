@@ -1,0 +1,75 @@
+@startuml
+title UC-04 Création d'une commande de service
+
+actor Client
+participant "routes\n(@requires_api_key)" as routes
+participant PlaceServiceOrder as svc
+participant ServiceOrderRepository as repo
+participant FleetFacade as fleet
+participant CatalogFacade as catalog
+participant ServiceOrder as order
+participant "problem.py\n(gestionnaire Flask)" as problem
+
+Client -> routes : POST /api/v1/service-orders\n(Idempotency-Key, items)
+alt cle API absente ou invalide
+  routes -> problem : UnauthorizedError
+  problem --> Client : 401
+end
+alt Idempotency-Key absente
+  routes -> problem : ValueError
+  problem --> Client : 422
+end
+routes -> svc : execute(customer_id, cle, items)
+
+svc -> repo : find_by_idempotency_key()
+alt meme cle, meme contenu (rejeu)
+  svc -> svc : journaliser le rejeu
+  svc --> routes : commande existante
+  routes --> Client : 201 (aucune creation)
+else meme cle, contenu different
+  svc -> problem : IdempotencyKeyConflictError
+  problem --> Client : 409
+end
+
+loop pour chaque drone
+  svc -> fleet : get_drone_reference(drone_id, customer_id)
+  alt None (inexistant ou autre client)
+    svc -> problem : DroneNotFoundError
+    problem --> Client : 404
+  else drone non eligible
+    svc -> problem : DroneNotEligibleError
+    problem --> Client : 422
+  end
+end
+
+loop pour chaque element
+  svc -> catalog : get_service_specification(type)
+  alt None
+    svc -> problem : UnknownServiceTypeError
+    problem --> Client : 422
+  end
+end
+
+loop pour chaque element
+  svc -> repo : has_open_item(drone, type)
+  alt service deja commande et ouvert
+    svc -> problem : ServiceAlreadyOrderedError
+    problem --> Client : 409
+  end
+end
+
+svc -> order : create(items + caracteristiques)
+alt vide, plusieurs drones ou service en double
+  order -> problem : InvalidOrderError
+  problem --> Client : 422
+end
+
+svc -> repo : save(commande)
+alt contrainte UNIQUE violee (requetes simultanees)
+  repo -> problem : IdempotencyKeyConflictError
+  problem --> Client : 409
+end
+svc -> svc : journaliser la creation
+svc --> routes : commande
+routes --> Client : 201 (ACKNOWLEDGED, elements PENDING)
+@enduml

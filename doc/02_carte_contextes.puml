@@ -1,0 +1,15 @@
+@startuml
+!pragma layout smetana
+title Carte du contexte
+
+rectangle "Commandes" as orders
+rectangle "Flotte" as fleet
+rectangle "Catalogue" as catalog
+rectangle "Activation\n(modelise)" as prov
+rectangle "Coeur 5G" as core
+
+orders --> fleet : verifie le drone
+orders --> catalog : lit les caracteristiques
+prov ..> orders
+prov ..> core : couche anti-corruption
+@enduml

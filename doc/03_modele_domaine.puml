@@ -1,0 +1,48 @@
+@startuml
+!pragma layout smetana
+title Modele de domaine
+hide empty members
+
+package "Flotte (fleet)" {
+  class Drone {
+    drone_id
+    customer_id
+    status
+  }
+  class DroneId
+  class Imsi
+  class Iccid
+  Drone *-- DroneId
+  Drone *-- Imsi
+  Drone *-- Iccid
+}
+
+package "Catalogue (catalog)" {
+  class ServiceSpecification {
+    service_type
+    service_name
+  }
+  class ServiceCharacteristics
+  ServiceSpecification *-- ServiceCharacteristics
+}
+
+package "Commandes (orders)" {
+  class ServiceOrder {
+    order_id
+    customer_id
+    idempotency_key
+    state()
+  }
+  class ServiceOrderItem {
+    item_id
+    drone_id
+    service_type
+    characteristics
+    state
+  }
+  ServiceOrder "1" *-- "1..*" ServiceOrderItem
+}
+
+ServiceOrderItem ..> Drone : drone_id seulement
+ServiceOrderItem ..> ServiceSpecification : caracteristiques copiees
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+!pragma layout smetana
+title Déploiement — Docker Compose
+skinparam componentStyle rectangle
+
+actor Client
+
+node "Docker (poste local)" {
+  node "app\nFlask" as app
+  database "db\nMySQL 8.4" as db
+  storage "volume db-data" as vol
+}
+
+Client --> app : localhost:5000
+app --> db : db:3306
+db --> vol
+@enduml

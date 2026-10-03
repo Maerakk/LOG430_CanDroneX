@@ -1,0 +1,43 @@
+@startuml
+title UC-02 Enregistrer un drone
+
+actor Client
+participant "routes\n(@requires_api_key)" as routes
+participant RegisterDrone
+participant DroneRepository
+participant "problem.py\n(gestionnaire Flask)" as problem
+
+Client -> routes : POST /api/v1/drones
+alt cle API absente ou invalide
+  routes -> problem : UnauthorizedError
+  problem --> Client : 401
+end
+alt champ manquant
+  routes -> problem : ValueError
+  problem --> Client : 422
+end
+routes -> RegisterDrone : execute()
+RegisterDrone -> RegisterDrone : creer DroneId, Imsi, Iccid
+alt format invalide
+  RegisterDrone -> problem : ValueError
+  problem --> Client : 422
+end
+RegisterDrone -> DroneRepository : get()
+alt drone deja enregistre
+  RegisterDrone -> problem : DroneAlreadyRegisteredError
+  problem --> Client : 409
+end
+RegisterDrone -> DroneRepository : imsi_in_use() / iccid_in_use()
+alt IMSI ou ICCID deja utilise
+  RegisterDrone -> problem : NetworkIdentifierError
+  problem --> Client : 409
+end
+RegisterDrone -> DroneRepository : save()
+alt contrainte UNIQUE violee (requetes simultanees)
+  DroneRepository -> problem : NetworkIdentifierError
+  problem --> Client : 409
+end
+RegisterDrone -> RegisterDrone : journaliser (IMSI masque)
+RegisterDrone --> routes : Drone
+routes --> Client : 201 (IMSI masque)
+@enduml

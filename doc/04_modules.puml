@@ -1,0 +1,30 @@
+@startuml
+!pragma layout smetana
+title Modules
+skinparam componentStyle rectangle
+
+package "Application Flask" {
+  [fleet]
+  [catalog]
+  [orders]
+  [shared]
+  [activation\n(modélisé)] as activation #line.dashed
+}
+
+database "MySQL" {
+  [schema fleet]
+  [schema catalog]
+  [schema orders]
+}
+
+[orders] --> [fleet] : FleetFacade
+[orders] --> [catalog] : CatalogFacade
+[fleet] --> [schema fleet]
+[catalog] --> [schema catalog]
+[orders] --> [schema orders]
+activation ..> [orders] : via un port
+activation ..> [fleet] : IMSI
+[fleet] --> [shared]
+[catalog] --> [shared]
+[orders] --> [shared]
+@enduml

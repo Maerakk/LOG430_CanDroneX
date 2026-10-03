@@ -1,0 +1,44 @@
+@startuml
+!pragma layout smetana
+title Modèle logique des données
+hide circle
+
+package "fleet" {
+  entity drone {
+    id <<PK>>
+    customer_id
+    drone_id
+    imsi <<UNIQUE>>
+    iccid <<UNIQUE>>
+    status
+  }
+}
+
+package "catalog" {
+  entity service_specification {
+    service_type <<PK>>
+    service_name
+    sst, sd, dnn, five_qi, arp, ambr
+  }
+}
+
+package "orders" {
+  entity service_order {
+    order_id <<PK>>
+    customer_id
+    idempotency_key
+  }
+  entity service_order_item {
+    item_id <<PK>>
+    order_id <<FK>>
+    drone_id
+    service_type
+    characteristics (JSON)
+    state
+  }
+}
+
+service_order ||--|{ service_order_item
+service_order_item .. drone : drone_id\n(sans FK)
+service_order_item .. service_specification : copie JSON
+@enduml

@@ -13,11 +13,11 @@ curl.exe -s -i -X POST "$BASE/service-orders" -H $AUTH -H "Idempotency-Key: demo
   -H "Content-Type: application/json" `
   -d '{\"items\": [{\"droneId\": \"DRN-0231\", \"serviceType\": \"C2\"}, {\"droneId\": \"DRN-0231\", \"serviceType\": \"IMAGERY\"}]}'
 
-Write-Host "`n3. Rejouer la même commande (attendu : la même commande)" -ForegroundColor Cyan
+Write-Host "`n3. Rejouer la meme commande (attendu : la meme commande)" -ForegroundColor Cyan
 curl.exe -s -i -X POST "$BASE/service-orders" -H $AUTH -H "Idempotency-Key: demo-order-0231" `
   -H "Content-Type: application/json" `
   -d '{\"items\": [{\"droneId\": \"DRN-0231\", \"serviceType\": \"C2\"}, {\"droneId\": \"DRN-0231\", \"serviceType\": \"IMAGERY\"}]}'
 
-Write-Host "`n4. Requête sans clé d'API (attendu : 401)" -ForegroundColor Cyan
+Write-Host "`n4. Requete sans cle d'API (attendu : 401)" -ForegroundColor Cyan
 curl.exe -s -i -X POST "$BASE/drones" -H "Content-Type: application/json" `
   -d '{\"droneId\": \"DRN-0999\", \"imsi\": \"999700000099999\", \"iccid\": \"8999970000000099999\"}'
