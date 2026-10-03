@@ -12,16 +12,14 @@ TEST_CUSTOMER = "CUST-TEST"
 def session_factory():
     engine = create_engine(TEST_DATABASE_URL)
 
-    # Si MySQL n'est pas lancé, on saute les tests au lieu de les faire échouer
     try:
         with engine.connect():
             pass
     except OperationalError:
         pytest.skip("MySQL n'est pas disponible : lance d'abord 'docker compose up -d db'")
 
-    yield sessionmaker(bind=engine)          # ← le test s'exécute ici
+    yield sessionmaker(bind=engine)
 
-    # Après le test : on supprime seulement les données du client de test
     with engine.begin() as connection:
         connection.execute(text(
             "DELETE FROM orders.service_order_item WHERE order_id IN "

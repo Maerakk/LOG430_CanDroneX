@@ -1,4 +1,4 @@
-# Scénario de démonstration CanDroneX — Phase 1
+# Scénario de démonstration CanDroneX - Phase 1
 # Prérequis : docker compose up --build (dans un autre terminal)
 
 $BASE = "http://127.0.0.1:5000/api/v1"

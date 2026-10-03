@@ -20,8 +20,8 @@ def create_fleet_blueprint(register_drone_service: RegisterDrone) -> Blueprint:
         body = {
             "droneId": drone.drone_id.value,
             "status": drone.status.value,
-            "imsi": drone.imsi.masked(),
+            "imsi": drone.imsi.masked()
         }
-        return jsonify(body), 201, {"Location": f"/api/v1/drones/{drone.drone_id.value}"}
+        return jsonify(body), 201
 
     return blueprint

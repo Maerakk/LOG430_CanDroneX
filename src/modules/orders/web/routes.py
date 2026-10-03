@@ -38,13 +38,11 @@ def create_orders_blueprint(place_service_order: PlaceServiceOrder,
         items = [(item.get("droneId"), item.get("serviceType")) for item in order_items]
 
         order = place_service_order.execute(g.customer_id, idempotency_key, items)
-        # ← l'en-tête Location indique où retrouver la commande créée
         return jsonify(order_to_json(order)), 201, {"Location": f"/api/v1/service-orders/{order.order_id}"}
 
     @blueprint.get("/<order_id>")
     @requires_api_key
     def get_order(order_id: str):
-        # ← plus de "if order is None" : GetServiceOrder lève déjà OrderNotFoundError (→ 404)
         order = get_service_order.execute(order_id, g.customer_id)
         return jsonify(order_to_json(order)), 200
 

@@ -7,7 +7,7 @@ class ServiceType(Enum):
 
 @dataclass(frozen=True)
 class ServiceCharacteristics:
-    # Network characteristics (Dossier de Domain 7.3)
+    # Network characteristics (Dossier de Domaine 7.3)
     sst: int
     sd: str
     dnn: str

@@ -1,4 +1,3 @@
--- Un schéma par module : chaque module possède ses données
 CREATE DATABASE IF NOT EXISTS fleet;
 CREATE DATABASE IF NOT EXISTS catalog;
 CREATE DATABASE IF NOT EXISTS orders;
@@ -7,7 +6,6 @@ GRANT ALL PRIVILEGES ON fleet.*   TO 'candronex'@'%';
 GRANT ALL PRIVILEGES ON catalog.* TO 'candronex'@'%';
 GRANT ALL PRIVILEGES ON orders.*  TO 'candronex'@'%';
 
--- Module Drones : le seul endroit où l'IMSI existe
 CREATE TABLE fleet.drone (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     customer_id VARCHAR(32) NOT NULL,
@@ -20,7 +18,6 @@ CREATE TABLE fleet.drone (
     CONSTRAINT uq_iccid UNIQUE (iccid)
 );
 
--- Module Catalogue
 CREATE TABLE catalog.service_specification (
     service_type       VARCHAR(16) PRIMARY KEY,
     service_name       VARCHAR(64) NOT NULL,
@@ -33,7 +30,6 @@ CREATE TABLE catalog.service_specification (
     ambr_downlink_mbps INT         NOT NULL
 );
 
--- Module Commandes
 CREATE TABLE orders.service_order (
     order_id        VARCHAR(32) PRIMARY KEY,
     customer_id     VARCHAR(32) NOT NULL,

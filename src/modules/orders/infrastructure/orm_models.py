@@ -11,7 +11,6 @@ class ServiceOrderRow(Base):
     order_id: Mapped[str] = mapped_column(String(32), primary_key=True)
     customer_id: Mapped[str] = mapped_column(String(32))
     idempotency_key: Mapped[str] = mapped_column(String(64))
-    # Les éléments de la commande, chargés et enregistrés avec elle (c'est l'agrégat)
     items: Mapped[list["ServiceOrderItemRow"]] = relationship(
         cascade="all, delete-orphan", lazy="selectin", order_by="ServiceOrderItemRow.item_id")
 
@@ -24,5 +23,5 @@ class ServiceOrderItemRow(Base):
     order_id: Mapped[str] = mapped_column(ForeignKey("orders.service_order.order_id"))
     drone_id: Mapped[str] = mapped_column(String(32))
     service_type: Mapped[str] = mapped_column(String(16))
-    characteristics: Mapped[dict] = mapped_column(JSON)       # la copie figée du catalogue
+    characteristics: Mapped[dict] = mapped_column(JSON)
     state: Mapped[str] = mapped_column(String(16))

@@ -1,6 +1,6 @@
 @startuml
 !pragma layout smetana
-title Déploiement — Docker Compose
+title Déploiement - Docker Compose
 skinparam componentStyle rectangle
 
 actor Client

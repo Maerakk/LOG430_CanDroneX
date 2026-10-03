@@ -24,15 +24,13 @@ def test_a_saved_drone_is_found_in_the_database(session_factory):
     found = repository.get(DroneId("DRN-TEST-1"), TEST_CUSTOMER)
 
     assert found is not None
-    assert found.imsi == Imsi(IMSI)          # l'objet valeur est bien reconstruit depuis la base
+    assert found.imsi == Imsi(IMSI)
 
 
 def test_the_database_refuses_a_duplicate_imsi(session_factory):
     repository = SqlDroneRepository(session_factory)
     repository.save(make_drone("DRN-TEST-1", IMSI, ICCID))
 
-    # On appelle directement le référentiel, sans passer par le service :
-    # c'est la contrainte UNIQUE de MySQL qui doit refuser le doublon
     with pytest.raises(NetworkIdentifierError):
         repository.save(make_drone("DRN-TEST-2", IMSI, "8999709999999999902"))
 
@@ -45,4 +43,4 @@ def test_an_order_and_its_items_are_saved_together(session_factory):
     found = repository.get(order.order_id, TEST_CUSTOMER)
 
     assert len(found.items) == 1
-    assert found.items[0].characteristics["arp"] == 2     # le contrat est bien stocké (colonne JSON)
+    assert found.items[0].characteristics["arp"] == 2

@@ -44,11 +44,9 @@ class SqlServiceOrderRepository(ServiceOrderRepository):
 
     def save(self, order: ServiceOrder) -> None:
         try:
-            # Une seule transaction : la commande ET ses éléments, ou rien du tout
             with self.session_factory.begin() as session:
-                session.merge(to_row(order))      # merge : insère, ou met à jour si elle existe déjà
+                session.merge(to_row(order))
         except IntegrityError:
-            # La contrainte UNIQUE (client, clé d'idempotence) a refusé un doublon
             raise IdempotencyKeyConflictError("This idempotency key was already used.")
 
     def get(self, order_id: str, customer_id: str) -> ServiceOrder | None:

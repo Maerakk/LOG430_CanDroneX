@@ -1,7 +1,7 @@
-# CanDroneX — Phase 1 (monolithe modulaire)
+# CanDroneX - Phase 1 (monolithe modulaire)
 
 Plateforme B2B de commande de services de connectivité 5G pour drones.
-Projet LOG430, Automne 2026 — Maëlle Marinier.
+Projet LOG430, Automne 2026 - Maëlle Marinier.
 
 ## Démarrer
 
@@ -22,14 +22,14 @@ Clés d'API de démonstration : `demo_key_1` (CUST-001), `demo_key_2` (CUST-002)
 
 ```
 pip install -r requirements.txt
-python -m pytest tests/unit          # tests unitaires, sans base
+python -m pytest tests/unit    # tests unitaires sans base
 docker compose up -d db
-python -m pytest tests/integration   # tests d'intégration, avec MySQL
+python -m pytest tests/integration      # tests d'intégration avec MySQL
 ```
 
 ## Arrêter et réinitialiser
 
 ```
-docker compose down       # arrête (les données sont conservées)
-docker compose down -v    # arrête et efface la base
+docker compose down         # arrête avec données conservées
+docker compose down -v      # arrête et efface la base
 ```
