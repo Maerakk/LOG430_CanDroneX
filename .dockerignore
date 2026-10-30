@@ -1,4 +1,10 @@
 .venv/
 .idea/
 .git/
-__pycache__/
+**/__pycache__/
+**/.pytest_cache/
+**/tests/
+load-tests/
+results/
+doc/
+.env

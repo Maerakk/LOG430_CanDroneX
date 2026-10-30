@@ -1,0 +1,135 @@
+{
+  "window": {
+    "start": "2026-10-29 20:27:48.789815",
+    "end": "2026-10-29 20:28:54.852794"
+  },
+  "load": {
+    "LOAD_RATE": "100",
+    "LOAD_RAMP": "20s",
+    "LOAD_STEADY": "40s"
+  },
+  "environment": {
+    "dockerCpus": 20,
+    "dockerMemoryGiB": 15.5,
+    "dockerOS": "Docker Desktop (containerized)",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "mock": {
+      "MOCK_LATENCY_MIN_MS": "300",
+      "MOCK_LATENCY_MAX_MS": "1500",
+      "MOCK_FAILURE_RATE": "0",
+      "MOCK_TIMEOUT_RATE": "0"
+    }
+  },
+  "throughput": {
+    "iterations": 4999,
+    "iterationsPerSecondAvg": 83.2,
+    "droppedIterations": 0,
+    "httpErrorRate": 0,
+    "httpDurationMs": {
+      "avg": 42.4,
+      "med": 7.0,
+      "p(90)": 132.4,
+      "p(95)": 151.5,
+      "p(99)": 190.7,
+      "max": 271.1
+    },
+    "thresholdsPassed": true
+  },
+  "activation": {
+    "ordered_items": "3000",
+    "received_items": "3000",
+    "active_items": "3000",
+    "not_finished_items": "0",
+    "failed_items": "0",
+    "p95_rank": "2850",
+    "p95_delay_ms": "1534.4570",
+    "avg_delay_ms": "991",
+    "max_delay_ms": "1708.6290"
+  },
+  "queueSamples": [
+    {
+      "ts": "2026-10-29 20:27:54",
+      "pending": 0,
+      "activating": 0,
+      "active": 4,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:27:59",
+      "pending": 0,
+      "activating": 15,
+      "active": 37,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:05",
+      "pending": 2,
+      "activating": 29,
+      "active": 165,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:10",
+      "pending": 1,
+      "activating": 40,
+      "active": 385,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:16",
+      "pending": 1,
+      "activating": 48,
+      "active": 693,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:21",
+      "pending": 3,
+      "activating": 57,
+      "active": 1015,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:27",
+      "pending": 0,
+      "activating": 52,
+      "active": 1359,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:32",
+      "pending": 2,
+      "activating": 49,
+      "active": 1687,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:38",
+      "pending": 1,
+      "activating": 51,
+      "active": 2016,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:43",
+      "pending": 0,
+      "activating": 55,
+      "active": 2343,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:49",
+      "pending": 2,
+      "activating": 53,
+      "active": 2668,
+      "failed": 4
+    },
+    {
+      "ts": "2026-10-29 20:28:54",
+      "pending": 0,
+      "activating": 13,
+      "active": 2991,
+      "failed": 4
+    }
+  ]
+}

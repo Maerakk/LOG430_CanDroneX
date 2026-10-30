@@ -1,0 +1,71 @@
+@startuml
+title UC-04 puis UC-06 - Commander C2 + Imagerie et activer les slices
+actor "Client B2B" as c
+participant "API Gateway" as gw
+participant "service-ordering-service\nPlaceServiceOrder" as so
+database "ordering-db" as odb
+participant "drone-management-service" as dm
+participant "slice-activation-service\nRequestActivation" as sa
+database "activation-db" as adb
+participant "ActivateService\n(thread d'arriere-plan)" as worker
+participant "NetworkProvisioningPort\nMockOpen5GSAdapter" as net
+
+c -> gw : POST /api/service-ordering/v1/serviceOrder\nBearer JWT, Idempotency-Key, 2 elements (C2, Imagerie)
+gw -> so : Authorization et X-Correlation-Id transmis
+so -> odb : find_by_idempotency_key(cle, clientId)
+alt meme cle, meme demande
+  so --> c : 200 commande existante (aucune creation)
+else meme cle, autre demande
+  so --> c : 409
+end
+so -> so : ServiceOrder.validate (vide, plusieurs drones, doublon, action) -> 422
+so -> dm : GET /drone/{droneId} (jeton du client)
+alt 404 (inexistant ou autre client)
+  so --> c : 404
+else non eligible
+  so --> c : 422
+else drone-management injoignable
+  so --> c : 503 Problem Details (rien n'est cree)
+end
+so -> so : catalogue : offre commandable ? (422) ; service deja PENDING/ACTIVATING/ACTIVE/UNKNOWN ? (409)
+so -> odb : add(commande + elements PENDING, acceptedAt) [une transaction]
+note right of so : journal : "service order accepted" (orderId)
+loop pour chaque element (une demande apres l'autre)
+  so -> sa : POST /api/slice-activation/v1/service\nIdempotency-Key = orderItemId (interne)
+  sa -> adb : find_by_order_item
+  alt element deja connu (rejeu)
+    sa --> so : 200 service existant
+  end
+  sa -> dm : GET /drone/{id}/networkIdentity (interne) -> IMSI
+  sa -> adb : add(Service PENDING, acceptedAt) [UNIQUE order_item_id]
+  sa -> worker : schedule(serviceId)
+  sa --> so : 202 {serviceId, PENDING}
+end
+alt slice-activation injoignable
+  so -> so : elements gardes PENDING sans serviceId,\nredemande a la prochaine consultation
+end
+so --> c : 201 commande (ACKNOWLEDGED, serviceId par element)
+
+== en arriere-plan, dans slice-activation-service ==
+worker -> adb : UPDATE ... SET ACTIVATING WHERE state = PENDING
+alt 0 ligne (un autre travailleur l'a pris)
+  worker -> worker : arret, aucune configuration en double
+end
+worker -> net : apply(NetworkConfiguration) (idempotent par serviceId)
+note right of net : latence 300-1500 ms, taux d'echec configurables
+alt confirmation
+  worker -> adb : ACTIVE, activatedAt
+else refus du reseau
+  worker -> adb : FAILED (NETWORK_REJECTED)
+else delai depasse (resultat indetermine)
+  worker -> net : reessai idempotent (max 3)
+  worker -> adb : UNKNOWN (NETWORK_TIMEOUT) si toujours sans reponse
+end
+
+== suivi par le client ==
+c -> gw : GET /serviceOrder/{orderId}
+gw -> so
+so -> sa : GET /service?orderId= (inventaire)
+so -> odb : update_items (etat des elements = etat des services)
+so --> c : 200 COMPLETED | PARTIALLY_COMPLETED | FAILED | IN_PROGRESS
+@enduml

@@ -1,0 +1,185 @@
+openapi: 3.0.3
+info:
+  title: CanDroneX Drone Management API
+  version: 1.0.0
+  description: |
+    UC-02 : enregistrer un drone et son identité réseau. Ce contrat est servi par drone-management-service.
+    Chaque drone appartient au compte client B2B identifié par la claim `azp` du JWT.
+    L'IMSI n'est jamais renvoyé en clair par l'API publique.
+servers:
+  - url: http://localhost:8080
+    description: API Gateway (seul point d'entrée des clients B2B)
+security:
+  - bearerAuth: []
+tags:
+  - name: drone
+  - name: internal
+    description: Routes appelées seulement par les autres microservices (absentes de la passerelle).
+paths:
+  /api/drone-management/v1/drone:
+    post:
+      tags: [drone]
+      operationId: registerDrone
+      summary: Enregistrer un drone (UC-02)
+      description: Rejouer exactement la même demande rend le drone existant (200), sans doublon.
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DroneRegistration' }
+            example: { droneId: DRN-0231, imsi: '302720000010231', iccid: '8930272000000010231' }
+      responses:
+        '201':
+          description: Drone enregistré.
+          headers:
+            Location: { schema: { type: string }, example: /api/drone-management/v1/drone/DRN-0231 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Drone' }
+        '200':
+          description: Rejeu identique, drone existant renvoyé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Drone' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: droneId déjà utilisé par ce client avec une autre identité, ou IMSI/ICCID déjà attribué.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example: { type: 'https://candronex.example/problems/conflict', title: Conflict, status: 409,
+                         detail: Network identity unavailable., instance: /api/drone-management/v1/drone }
+        '422': { $ref: '#/components/responses/BusinessRule' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    get:
+      tags: [drone]
+      operationId: listDrones
+      summary: Lister les drones du client authentifié
+      responses:
+        '200':
+          description: Drones du client (jamais ceux d'un autre client).
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Drone' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /api/drone-management/v1/drone/{droneId}:
+    get:
+      tags: [drone]
+      operationId: getDrone
+      summary: Consulter un drone
+      parameters:
+        - $ref: '#/components/parameters/DroneId'
+      responses:
+        '200':
+          description: Drone du client.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Drone' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /api/drone-management/v1/drone/{droneId}/networkIdentity:
+    get:
+      tags: [internal]
+      operationId: getNetworkIdentity
+      summary: Identité réseau d'un drone (interne, pour slice-activation-service)
+      description: Appelée avec le jeton du client retransmis. Non routée par la passerelle.
+      parameters:
+        - $ref: '#/components/parameters/DroneId'
+      responses:
+        '200':
+          description: IMSI en clair, nécessaire pour configurer le réseau.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NetworkIdentity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT émis par Keycloak (realm candronex, audience candronex-api), transmis par la passerelle.
+  parameters:
+    DroneId:
+      name: droneId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[A-Za-z0-9-]{3,32}$' }
+      example: DRN-0231
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string, pattern: '^[A-Za-z0-9._-]{1,128}$' }
+      description: Repris dans les journaux et renvoyé dans la réponse. Le service en génère un s'il est absent.
+  schemas:
+    DroneRegistration:
+      type: object
+      required: [droneId, imsi, iccid]
+      properties:
+        droneId: { type: string, pattern: '^[A-Za-z0-9-]{3,32}$', example: DRN-0231 }
+        imsi: { type: string, pattern: '^[0-9]{15}$', example: '302720000010231' }
+        iccid: { type: string, pattern: '^[0-9]{19,20}$', example: '8930272000000010231' }
+    Drone:
+      type: object
+      required: [droneId, status, eligible, imsi, iccid]
+      properties:
+        droneId: { type: string, example: DRN-0231 }
+        status: { type: string, enum: [active, suspended, retired] }
+        eligible: { type: boolean, description: Le drone peut recevoir des services. }
+        imsi: { type: string, description: IMSI masqué, example: '30272******0231' }
+        iccid: { type: string, description: ICCID masqué, example: '893027**********231' }
+    NetworkIdentity:
+      type: object
+      required: [droneId, imsi, eligible]
+      properties:
+        droneId: { type: string }
+        imsi: { type: string, pattern: '^[0-9]{15}$' }
+        eligible: { type: boolean }
+    Problem:
+      type: object
+      description: Format d'erreur uniforme (RFC 9457, application/problem+json).
+      required: [type, title, status, detail, instance]
+      properties:
+        type: { type: string, format: uri, example: 'https://candronex.example/problems/not-found' }
+        title: { type: string, example: Not Found }
+        status: { type: integer, example: 404 }
+        detail: { type: string, example: "Drone 'DRN-9999' not found." }
+        instance: { type: string, example: /api/drone-management/v1/drone/DRN-9999 }
+        correlationId: { type: string }
+  responses:
+    BadRequest:
+      description: Requête mal formée (JSON illisible, champ manquant ou de mauvais type).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://candronex.example/problems/bad-request', title: Bad Request, status: 400,
+                     detail: "Field 'imsi' is required and must be a str.", instance: /api/drone-management/v1/drone }
+    Unauthorized:
+      description: Jeton absent, expiré, mal signé, d'un autre émetteur ou sans l'audience candronex-api.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Drone inexistant ou appartenant à un autre client. La réponse est la même dans les deux cas, pour ne rien divulguer.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    BusinessRule:
+      description: Requête bien formée mais refusée par une règle du domaine (ex. IMSI de 14 chiffres).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: 'https://candronex.example/problems/invalid-value', title: Invalid Value, status: 422,
+                     detail: IMSI must be a 15-digit numeric string., instance: /api/drone-management/v1/drone }
+    InternalError:
+      description: Erreur inattendue.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }

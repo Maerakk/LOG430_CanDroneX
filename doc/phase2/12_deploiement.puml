@@ -1,0 +1,39 @@
+@startuml
+!pragma layout smetana
+title Vue de deploiement - Docker Compose (poste local)
+actor "Client B2B / k6" as c
+node "Hote Docker" {
+  node "keycloak\nquay.io/keycloak/keycloak:26.0" as kc
+  node "api-gateway\ndevopsfaith/krakend:2.7.2" as gw
+  node "swagger-ui" as sw
+  node "upstream-proxy\nnginx:1.27" as up
+  node "drone-management-service\ngunicorn :8000" as s1
+  node "service-ordering-service\ngunicorn :8000" as s2
+  node "slice-activation-service\ngunicorn :8000\n(+ MockOpen5GSAdapter)" as s3
+  database "drone-db\nmysql:8.4" as d1
+  database "ordering-db\nmysql:8.4" as d2
+  database "activation-db\nmysql:8.4" as d3
+  storage "volumes\ndrone-db-data\nordering-db-data\nactivation-db-data" as vol
+}
+c --> kc : :8081
+c --> gw : :8080
+c --> sw : :8082
+gw --> up : reseau interne
+up --> s1
+up --> s2
+up --> s3
+s2 --> s1
+s2 --> s3
+s3 --> s1
+s1 --> d1
+s2 --> d2
+s3 --> d3
+d1 --> vol
+d2 --> vol
+d3 --> vol
+note bottom of s3
+  Variables : MOCK_LATENCY_MIN_MS, MOCK_LATENCY_MAX_MS,
+  MOCK_FAILURE_RATE, MOCK_TIMEOUT_RATE, ACTIVATION_WORKERS
+  Aucun service ni base n'a de section ports:
+end note
+@enduml

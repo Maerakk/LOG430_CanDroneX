@@ -1,0 +1,395 @@
+{
+  "$schema": "https://www.krakend.io/schema/v2.7/krakend.json",
+  "version": 3,
+  "name": "CanDroneX API Gateway",
+  "port": 8080,
+  "timeout": "5s",
+  "output_encoding": "no-op",
+  "extra_config": {
+    "security/cors": {
+      "allow_origins": [
+        "*"
+      ],
+      "allow_methods": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ],
+      "allow_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id"
+      ],
+      "expose_headers": [
+        "X-Correlation-Id",
+        "Location"
+      ],
+      "max_age": "12h"
+    },
+    "telemetry/logging": {
+      "level": "WARNING",
+      "prefix": "[KRAKEND]",
+      "stdout": true
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/api/drone-management/v1/drone",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/drone-management/v1/drone",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/drone-management/v1/drone",
+      "method": "GET",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/drone-management/v1/drone",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/drone-management/v1/drone/{droneId}",
+      "method": "GET",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/drone-management/v1/drone/{droneId}",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/service-catalog/v1/serviceSpecification",
+      "method": "GET",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/service-catalog/v1/serviceSpecification",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/service-ordering/v1/serviceOrder",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/service-ordering/v1/serviceOrder",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/service-ordering/v1/serviceOrder/{orderId}",
+      "method": "GET",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/service-ordering/v1/serviceOrder/{orderId}",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/slice-activation/v1/service",
+      "method": "GET",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/slice-activation/v1/service",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      },
+      "input_query_strings": [
+        "orderId"
+      ]
+    },
+    {
+      "endpoint": "/api/slice-activation/v1/service/{serviceId}",
+      "method": "GET",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Idempotency-Key",
+        "X-Correlation-Id",
+        "X-Client-Id"
+      ],
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/slice-activation/v1/service/{serviceId}",
+          "encoding": "no-op"
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://keycloak:8080/realms/candronex/protocol/openid-connect/certs",
+          "disable_jwk_security": true,
+          "issuer": "http://localhost:8081/realms/candronex",
+          "audience": [
+            "candronex-api"
+          ],
+          "cache": true,
+          "propagate_claims": [
+            [
+              "azp",
+              "X-Client-Id"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "endpoint": "/api/drone-management/v1/openapi.yaml",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/drone-management/v1/openapi.yaml",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/service-ordering/v1/openapi.yaml",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/service-ordering/v1/openapi.yaml",
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/slice-activation/v1/openapi.yaml",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "host": [
+            "http://upstream-proxy:8000"
+          ],
+          "url_pattern": "/api/slice-activation/v1/openapi.yaml",
+          "encoding": "no-op"
+        }
+      ]
+    }
+  ]
+}

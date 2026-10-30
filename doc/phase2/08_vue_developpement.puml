@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+title Vue développement - organisation d'un service
+folder "common/candronex_common\n(châssis : JWT, corrélation, journaux,\nProblem Details, client HTTP)" as common
+folder "services/<service>/<package>" as svc {
+  folder "domain\nmodel.py, errors.py" as d1 {
+    folder "port/inbound\n(cas d'utilisation)" as pin
+    folder "port/outbound\n(dépôts, réseau, autres services)" as pout
+  }
+  folder "application\n(implémente port/inbound)" as a1
+  folder "adapter/inbound\n(REST)" as ain
+  folder "adapter/outbound\n(MySQL, HTTP, mock)" as aout
+  file "main.py (racine de composition)" as main
+}
+folder "gateway (krakend.json, nginx,\nopenapi.yaml généré)" as gw
+folder "tests (intégration REST,\ncontrats, architecture)" as tests
+main --> ain
+main --> aout
+ain --> pin
+a1 ..|> pin
+a1 --> pout
+aout ..|> pout
+ain --> common
+d1 ..> common : errors.py seulement
+tests ..> svc
+note bottom of d1
+  Vérifié par tests/contract/test_architecture.py :
+  domain n'importe ni Flask, ni SQLAlchemy, ni requests,
+  application n'importe aucun adaptateur,
+  et aucun service n'importe le code d'un autre.
+end note
+@enduml

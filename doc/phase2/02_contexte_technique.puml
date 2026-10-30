@@ -1,0 +1,30 @@
+@startuml
+!pragma layout smetana
+title Contexte technique - Phase 2
+actor "Client B2B" as client
+node "Keycloak fourni\n:8081 (realm candronex)" as kc
+rectangle "Docker Compose (reseau interne)" {
+  node "API Gateway\nKrakenD :8080" as gw
+  node "upstream-proxy\n(nginx)" as up
+  node "drone-management-service" as dms
+  node "service-ordering-service" as sos
+  node "slice-activation-service\n[MockOpen5GSAdapter]" as sas
+}
+cloud "Coeur 5G Open5GS\n(Phase 3)" as core
+
+client --> kc : (1) POST /token\nclient credentials
+client --> gw : (2) REST + Bearer JWT
+gw --> kc : JWKS (cles publiques)
+gw --> up : Authorization transmis tel quel
+up --> dms
+up --> sos
+up --> sas
+dms ..> kc : JWKS
+sos ..> kc : JWKS
+sas ..> kc : JWKS
+sas ..> core : NetworkProvisioningPort\n(adaptateur reel en Phase 3)
+note right of gw
+  Frontiere de confiance : seuls la passerelle,
+  Keycloak et Swagger UI sont exposes.
+end note
+@enduml

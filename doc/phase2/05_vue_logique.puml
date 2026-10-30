@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+title Vue logique - microservices, API et bases
+component "API Gateway (KrakenD)" as gw
+package "drone-management-service" {
+  component "API /api/drone-management/v1" as p1
+  component "Drone Management" as dm
+  database "drone-db" as db1
+}
+package "service-ordering-service" {
+  component "API /api/service-ordering/v1\n+ /api/service-catalog/v1" as p2
+  component "Service Ordering" as so
+  component "Service Catalog" as sc
+  database "ordering-db" as db2
+}
+package "slice-activation-service" {
+  component "API /api/slice-activation/v1" as p3
+  component "Service Activation\n+ Inventory" as sa
+  component "MockOpen5GSAdapter" as mock
+  database "activation-db" as db3
+}
+gw --> p1
+gw --> p2
+gw --> p3
+p1 --> dm
+p2 --> so
+p2 --> sc
+p3 --> sa
+dm --> db1
+so --> db2
+sc --> db2
+sa --> db3
+sa --> mock : NetworkProvisioningPort
+so --> p1 : GET drone/{id}
+so --> p3 : POST service (interne)\nGET service?orderId=
+sa --> p1 : GET drone/{id}/networkIdentity\n(interne)
+legend right
+  Chaque service ne lit et n'ecrit que sa propre base.
+  Echanges entre services : REST + DTO JSON seulement.
+  Graphe acyclique : ordering -> drone, ordering -> activation, activation -> drone.
+endlegend
+@enduml

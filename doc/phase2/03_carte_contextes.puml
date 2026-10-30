@@ -1,0 +1,38 @@
+@startuml
+!pragma layout smetana
+title Carte des contextes delimites et microservices
+
+package "drone-management-service" #E8F4FF {
+  rectangle "Drone Management\n(agregat Drone)" as dm
+}
+package "service-ordering-service" #FFF4E0 {
+  rectangle "Service Ordering\n(agregat ServiceOrder, TMF641)" as so
+  rectangle "Service Catalog\n(agregat ServiceSpecification, TMF633)" as sc
+}
+package "slice-activation-service" #E8FFE8 {
+  rectangle "Service Activation (TMF640)\nRequestActivation, ActivateService" as sa
+  rectangle "Service Inventory (TMF638)\n(agregat Service)\nport ServiceInventory" as si
+}
+rectangle "Gestion des clients\n(Client, Credential)\nKeycloak fourni" as cm #EEEEEE
+rectangle "Audit\n(AuditEntry)\njournal d'audit de chaque service" as au #EEEEEE
+rectangle "Reseau 5G\n(Open5GS, Phase 3)" as net #EEEEEE
+
+so --> dm : Client/Fournisseur\nport DroneDirectory
+so --> sc : en memoire\nport ServiceCatalog
+so --> sa : Client/Fournisseur\nport ServiceActivation\n(demander l'activation)
+sa --> dm : Client/Fournisseur\nport DroneIdentityProvider (IMSI)
+sa --> net : Couche anti-corruption\nNetworkProvisioningPort
+sa --> si : met a jour l'etat du Service
+dm ..> cm : identite du client (azp)
+so ..> cm
+sa ..> cm
+dm ..> au
+so ..> au
+sa ..> au
+
+legend right
+  Fleche pleine : appel synchrone (REST, ou en memoire dans un meme service)
+  Fleche pointillee : dependance sans appel metier (jeton, journal)
+  Aucun cycle : Activation ne rappelle jamais Commandes
+endlegend
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+!pragma layout smetana
+title Contexte metier - CanDroneX au centre
+left to right direction
+actor "Client B2B\n(application d'un exploitant\nde drones, ex. Inspectra)" as client
+actor "Administrateur\nde plateforme" as admin
+rectangle "CanDroneX\n(plateforme B2B de services\nde connectivite 5G pour drones)" as cdx #LightBlue
+actor "Operateur du reseau 5G\n(coeur 5G, slices)" as op
+actor "ISDE\n(licences de spectre)" as isde
+actor "Transport Canada\n(RAC partie IX, liaison C2)" as tc
+actor "CRTC / Loi sur\nles telecommunications" as crtc
+
+client --> cdx : enregistre ses drones (UC-02)\ncommande C2 / Imagerie (UC-04)\nsuit commandes et services
+admin --> cdx : cree les clients B2B\n(Keycloak fourni en Phase 2)
+cdx --> op : active la slice pour l'IMSI\ndu drone (UC-06, simule en Phase 2)
+isde ..> op : licence de spectre
+tc ..> client : liaison C2 prioritaire
+crtc ..> cdx : protection des donnees\ndes abonnes (IMSI)
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+title UC-02 - Obtenir un jeton puis enregistrer un drone par la passerelle
+actor "Client B2B\n(inspectra-demo)" as c
+participant "Keycloak fourni" as kc
+participant "API Gateway\n(KrakenD)" as gw
+participant "drone-management-service\nrest.py" as rest
+participant "RegisterDrone" as uc
+database "drone-db" as db
+
+c -> kc : POST /realms/candronex/.../token\ngrant_type=client_credentials, client_id, client_secret
+kc --> c : 200 access_token (iss, aud=candronex-api, azp=inspectra-demo, exp=5 min)
+c -> gw : POST /api/drone-management/v1/drone\nAuthorization: Bearer <JWT>, X-Correlation-Id
+alt jeton absent, expire, mal signe, autre emetteur ou audience
+  gw --> c : 401 (refuse par la passerelle)
+end
+gw -> rest : meme requete, Authorization inchange
+rest -> rest : TokenVerifier : signature (JWKS), exp, iss, aud\nclientId = claim azp
+alt jeton invalide (appel qui contourne la passerelle)
+  rest --> gw : 401 application/problem+json
+end
+alt JSON illisible ou champ manquant
+  rest --> gw : 400 Problem Details
+end
+rest -> uc : execute(droneId, imsi, iccid, clientId)
+uc -> uc : DroneId, Imsi, Iccid (objets-valeurs)
+alt format invalide
+  uc --> rest : InvalidValueError -> 422
+end
+uc -> db : get(droneId, clientId)
+alt meme drone, meme identite (rejeu)
+  uc --> rest : drone existant -> 200
+else meme droneId, autre identite
+  uc --> rest : DroneAlreadyRegisteredError -> 409
+end
+uc -> db : imsi_in_use / iccid_in_use, puis save
+alt IMSI ou ICCID deja attribue (ou contrainte UNIQUE)
+  uc --> rest : NetworkIdentityUnavailableError -> 409
+end
+uc --> rest : Drone (journal : IMSI masque; audit drone.registered)
+rest --> gw : 201 {droneId, status, eligible, imsi masque}
+gw --> c : 201
+@enduml
