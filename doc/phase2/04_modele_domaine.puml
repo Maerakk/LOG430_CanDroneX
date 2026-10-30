@@ -1,0 +1,74 @@
+@startuml
+!pragma layout smetana
+title Modele du domaine par contexte (Contexte > Agregat > Entites > Objets-valeurs)
+hide empty members
+
+package "Drone Management" {
+  class Drone <<agregat>> {
+    clientId
+    status : DroneStatus
+    register() / is_eligible()
+  }
+  class DroneId <<VO>>
+  class Imsi <<VO>> {
+    masked()
+  }
+  class Iccid <<VO>>
+  Drone *-- DroneId
+  Drone *-- Imsi
+  Drone *-- Iccid
+}
+
+package "Service Catalog" {
+  class ServiceSpecification <<agregat>> {
+    id (ex. SPEC-C2-URLLC)
+    name, sliceType, lifecycleStatus
+    is_orderable()
+  }
+  class CharacteristicValue <<VO>> {
+    name, valueType, value
+  }
+  ServiceSpecification *-- "1..*" CharacteristicValue
+}
+
+package "Service Ordering" {
+  class ServiceOrder <<agregat>> {
+    orderId, clientId, idempotencyKey
+    acceptedAt
+    state() : OrderState
+  }
+  class ServiceOrderItem <<entite>> {
+    itemId, action = add
+    droneId, state : ItemState
+  }
+  class OrderedService <<VO>> {
+    serviceSpecification.id
+    serviceId (inventaire)
+  }
+  class ServiceCharacteristic <<VO>> {
+    figee a la commande
+  }
+  ServiceOrder *-- "1..*" ServiceOrderItem
+  ServiceOrderItem *-- OrderedService
+  OrderedService *-- "1..*" ServiceCharacteristic
+}
+
+package "Service Activation / Inventory" {
+  class Service <<agregat>> {
+    serviceId, orderItemId, droneId
+    state : ServiceState
+    acceptedAt, activatedAt, failureReason
+    start_activation() / activate() / fail()
+  }
+  class Characteristic <<VO>>
+  class NetworkConfiguration <<VO>> {
+    imsi, sst, sd, dnn, 5qi, arp, ambr
+  }
+  Service *-- "1..*" Characteristic
+  Service ..> NetworkConfiguration : produit
+}
+
+ServiceOrderItem ..> Drone : droneId (reference)
+OrderedService ..> ServiceSpecification : copie des caracteristiques
+OrderedService ..> Service : serviceId (reference)
+@enduml

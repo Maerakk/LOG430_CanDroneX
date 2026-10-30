@@ -1,0 +1,12 @@
+@startuml
+title Cycle de vie d'un Service (inventaire) = état de l'élément de commande
+[*] --> PENDING : demande d'activation reçue\n(acceptedAt copié de la commande)
+PENDING --> ACTIVATING : un thread prend le service\n(transition conditionnelle en base)
+ACTIVATING --> ACTIVE : le réseau confirme\n(activatedAt)
+ACTIVATING --> FAILED : refus du réseau (échec certain)\nou erreur interne
+ACTIVATING --> ACTIVATING : délai dépassé :\nréessai idempotent (max 3)
+ACTIVATING --> UNKNOWN : toujours pas de réponse\naprès 3 essais
+ACTIVE --> [*]
+FAILED --> [*] : une nouvelle commande est permise
+UNKNOWN --> [*] : à réconcilier avec le réseau (UC-13, Phase 3)\nbloque une nouvelle commande
+@enduml

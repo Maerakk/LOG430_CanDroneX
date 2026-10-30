@@ -1,28 +1,163 @@
+x-mysql: &mysql
+  image: mysql:8.4
+  command: ["--max-connections=600", "--innodb-flush-log-at-trx-commit=2", "--skip-name-resolve"]
+  healthcheck:
+    test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+    interval: 5s
+    retries: 30
+
+x-service: &service
+  restart: unless-stopped
+  environment: &service-env
+    JWT_ISSUER: http://localhost:8081/realms/candronex
+    JWT_AUDIENCE: candronex-api
+    JWT_JWKS_URL: http://keycloak:8080/realms/candronex/protocol/openid-connect/certs
+    WEB_WORKERS: ${WEB_WORKERS:-8}
+    WEB_THREADS: ${WEB_THREADS:-16}
+    DB_POOL_SIZE: "16"
+    DB_MAX_OVERFLOW: "8"
+
 services:
-  db:
-    image: mysql:8.4
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev --import-realm --http-port=8080
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_USER: ${MYSQL_USER:-candronex}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-candronex}
-    ports:
-      - "3310:3306"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_HOSTNAME: http://localhost:8081
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HEALTH_ENABLED: "true"
+      CANDRONEX_ADMIN_SECRET: ${CANDRONEX_ADMIN_SECRET}
+      CLIENT_MANAGEMENT_SERVICE_SECRET: ${CLIENT_MANAGEMENT_SERVICE_SECRET}
+      INSPECTRA_DEMO_SECRET: ${INSPECTRA_DEMO_SECRET}
+      AEROTECH_DEMO_SECRET: ${AEROTECH_DEMO_SECRET}
+      JETON_COURT_SECRET: ${JETON_COURT_SECRET}
     volumes:
-      - db-data:/var/lib/mysql
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      retries: 10
-  app:
-    build: .
+      - ./keycloak/realm-candronex.json:/opt/keycloak/data/import/realm-candronex.json:ro
     ports:
-      - "5000:5000"
-    environment:
-      DATABASE_URL: mysql+pymysql://candronex:candronex@db:3306
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'UP' <&3"]
+      interval: 10s
+      retries: 30
+
+  api-gateway:
+    image: devopsfaith/krakend:2.7.2
+    volumes:
+      - ./gateway/krakend.json:/etc/krakend/krakend.json:ro
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
     depends_on:
-      db:
-        condition: service_healthy
+      keycloak: { condition: service_healthy }
+      upstream-proxy: { condition: service_started }
+
+  upstream-proxy:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./gateway/upstream-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      drone-management-service: { condition: service_started }
+      service-ordering-service: { condition: service_started }
+      slice-activation-service: { condition: service_started }
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.17.14
+    environment:
+      URLS: >-
+        [{"name":"Passerelle (contrat public, OAuth2)","url":"/specs/gateway.openapi.yaml"},
+         {"name":"drone-management-service","url":"http://localhost:${GATEWAY_PORT:-8080}/api/drone-management/v1/openapi.yaml"},
+         {"name":"service-ordering-service","url":"http://localhost:${GATEWAY_PORT:-8080}/api/service-ordering/v1/openapi.yaml"},
+         {"name":"slice-activation-service","url":"http://localhost:${GATEWAY_PORT:-8080}/api/slice-activation/v1/openapi.yaml"}]
+    volumes:
+      - ./gateway/openapi.yaml:/usr/share/nginx/html/specs/gateway.openapi.yaml:ro
+    ports:
+      - "${SWAGGER_PORT:-8082}:8080"
+
+  drone-db:
+    <<: *mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: drone_management
+      MYSQL_USER: drone_management
+      MYSQL_PASSWORD: ${DRONE_DB_PASSWORD}
+    volumes:
+      - drone-db-data:/var/lib/mysql
+      - ./services/drone-management-service/db:/docker-entrypoint-initdb.d:ro
+
+  drone-management-service:
+    <<: *service
+    build: { context: ., dockerfile: services/drone-management-service/Dockerfile }
+    environment:
+      <<: *service-env
+      DATABASE_URL: mysql+pymysql://drone_management:${DRONE_DB_PASSWORD}@drone-db:3306/drone_management
+    depends_on:
+      drone-db: { condition: service_healthy }
+
+  ordering-db:
+    <<: *mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: service_ordering
+      MYSQL_USER: service_ordering
+      MYSQL_PASSWORD: ${ORDERING_DB_PASSWORD}
+    volumes:
+      - ordering-db-data:/var/lib/mysql
+      - ./services/service-ordering-service/db:/docker-entrypoint-initdb.d:ro
+
+  service-ordering-service:
+    <<: *service
+    build: { context: ., dockerfile: services/service-ordering-service/Dockerfile }
+    environment:
+      <<: *service-env
+      DATABASE_URL: mysql+pymysql://service_ordering:${ORDERING_DB_PASSWORD}@ordering-db:3306/service_ordering
+      DRONE_MANAGEMENT_URL: http://drone-management-service:8000
+      SLICE_ACTIVATION_URL: http://slice-activation-service:8000
+      HTTP_READ_TIMEOUT_S: "2"
+    depends_on:
+      ordering-db: { condition: service_healthy }
+
+  activation-db:
+    <<: *mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: slice_activation
+      MYSQL_USER: slice_activation
+      MYSQL_PASSWORD: ${ACTIVATION_DB_PASSWORD}
+    volumes:
+      - activation-db-data:/var/lib/mysql
+      - ./services/slice-activation-service/db:/docker-entrypoint-initdb.d:ro
+
+  slice-activation-service:
+    <<: *service
+    build: { context: ., dockerfile: services/slice-activation-service/Dockerfile }
+    environment:
+      <<: *service-env
+      DATABASE_URL: mysql+pymysql://slice_activation:${ACTIVATION_DB_PASSWORD}@activation-db:3306/slice_activation
+      DRONE_MANAGEMENT_URL: http://drone-management-service:8000
+      HTTP_READ_TIMEOUT_S: "1.5"
+      MOCK_LATENCY_MIN_MS: ${MOCK_LATENCY_MIN_MS:-300}
+      MOCK_LATENCY_MAX_MS: ${MOCK_LATENCY_MAX_MS:-1500}
+      MOCK_FAILURE_RATE: ${MOCK_FAILURE_RATE:-0}
+      MOCK_TIMEOUT_RATE: ${MOCK_TIMEOUT_RATE:-0}
+      WEB_WORKERS: ${ACTIVATION_WEB_WORKERS:-12}
+      ACTIVATION_WORKERS: ${ACTIVATION_WORKERS:-40}
+    depends_on:
+      activation-db: { condition: service_healthy }
+
+  k6:
+    image: grafana/k6:0.54.0
+    profiles: ["load"]
+    command: run /scripts/candronex.js
+    environment:
+      CLIENT_SECRET: ${INSPECTRA_DEMO_SECRET}
+      RATE: ${LOAD_RATE:-600}
+      RAMP: ${LOAD_RAMP:-1m}
+      STEADY: ${LOAD_STEADY:-5m}
+    volumes:
+      - ./load-tests:/scripts:ro
+      - ./results:/results
 
 volumes:
-  db-data:
+  drone-db-data:
+  ordering-db-data:
+  activation-db-data:

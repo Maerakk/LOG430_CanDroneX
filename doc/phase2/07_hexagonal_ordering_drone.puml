@@ -1,0 +1,54 @@
+@startuml
+!pragma layout smetana
+title service-ordering-service et drone-management-service - ports et adaptateurs
+skinparam componentStyle rectangle
+package "service-ordering-service" {
+  component "ordering/adapter/inbound/rest.py" as orest
+  component "catalog/adapter/inbound/rest.py" as crest
+  rectangle "port/inbound :\nPlaceServiceOrderUseCase\nGetServiceOrderUseCase" as opin #FFFFCC
+  rectangle "port/inbound :\nCatalogQueryUseCase" as cpin #FFFFCC
+  component "application :\nPlaceServiceOrder\nGetServiceOrder\nActivationTracker" as ouc
+  component "application :\nCatalogQueries" as cq
+  component "ServiceOrder (agrégat)\ncompute_order_state" as om
+  rectangle "port/outbound : ServiceOrderRepository" as orp #FFFFCC
+  rectangle "port/outbound : DroneDirectory" as dd #FFFFCC
+  rectangle "port/outbound : ServiceCatalog" as scp #FFFFCC
+  rectangle "port/outbound : ServiceActivation" as sap #FFFFCC
+  component "SqlServiceOrderRepository" as osql
+  component "HttpDroneDirectory" as hdd
+  component "InProcessServiceCatalog" as ipc
+  component "HttpServiceActivation" as hsa
+  orest --> opin
+  crest --> cpin
+  ouc ..|> opin
+  cq ..|> cpin
+  ouc --> om
+  ouc --> orp
+  ouc --> dd
+  ouc --> scp
+  ouc --> sap
+  osql ..|> orp
+  hdd ..|> dd
+  ipc ..|> scp
+  hsa ..|> sap
+  ipc --> cpin
+}
+package "drone-management-service" {
+  component "adapter/inbound/rest.py" as drest
+  rectangle "port/inbound :\nRegisterDroneUseCase\nGetDroneUseCase\nListDronesUseCase" as dpin #FFFFCC
+  component "application :\nRegisterDrone\nGetDrone / ListDrones" as duc
+  component "Drone (agrégat)\nImsi, Iccid, DroneId" as dmodel
+  rectangle "port/outbound : DroneRepository" as drp #FFFFCC
+  component "SqlDroneRepository" as dsql
+  drest --> dpin
+  duc ..|> dpin
+  duc --> dmodel
+  duc --> drp
+  dsql ..|> drp
+}
+hdd --> drest : REST (jeton retransmis)
+legend right
+  Jaune : ports définis par le domaine du service.
+  Pointillé à tête creuse : implémente le port.
+endlegend
+@enduml

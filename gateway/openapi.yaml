@@ -1,0 +1,829 @@
+# Généré par gateway/build_openapi.py, ne pas modifier à la main.
+openapi: 3.0.3
+info:
+  title: CanDroneX API publique (passerelle)
+  version: 1.0.0
+  description: Point d'entrée unique des clients B2B. Le jeton s'obtient en OAuth2 client credentials auprès du Keycloak fourni
+    (realm candronex, audience candronex-api). La passerelle transmet l'en-tête Authorization sans le modifier, et chaque
+    microservice vérifie le jeton puis filtre les données par la claim azp.
+servers:
+- url: http://localhost:8080
+  description: API Gateway (KrakenD)
+security:
+- oauth2: []
+paths:
+  /api/drone-management/v1/drone:
+    post:
+      tags:
+      - drone-management-service
+      operationId: registerDrone
+      summary: Enregistrer un drone (UC-02)
+      description: Rejouer exactement la même demande rend le drone existant (200), sans doublon.
+      parameters:
+      - $ref: '#/components/parameters/Drone_CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Drone_DroneRegistration'
+            example:
+              droneId: DRN-0231
+              imsi: '302720000010231'
+              iccid: '8930272000000010231'
+      responses:
+        '201':
+          description: Drone enregistré.
+          headers:
+            Location:
+              schema:
+                type: string
+              example: /api/drone-management/v1/drone/DRN-0231
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Drone_Drone'
+        '200':
+          description: Rejeu identique, drone existant renvoyé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Drone_Drone'
+        '400':
+          $ref: '#/components/responses/Drone_BadRequest'
+        '401':
+          $ref: '#/components/responses/Drone_Unauthorized'
+        '409':
+          description: droneId déjà utilisé par ce client avec une autre identité, ou IMSI/ICCID déjà attribué.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Drone_Problem'
+              example:
+                type: https://candronex.example/problems/conflict
+                title: Conflict
+                status: 409
+                detail: Network identity unavailable.
+                instance: /api/drone-management/v1/drone
+        '422':
+          $ref: '#/components/responses/Drone_BusinessRule'
+        '500':
+          $ref: '#/components/responses/Drone_InternalError'
+    get:
+      tags:
+      - drone-management-service
+      operationId: listDrones
+      summary: Lister les drones du client authentifié
+      responses:
+        '200':
+          description: Drones du client (jamais ceux d'un autre client).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Drone_Drone'
+        '401':
+          $ref: '#/components/responses/Drone_Unauthorized'
+        '500':
+          $ref: '#/components/responses/Drone_InternalError'
+  /api/drone-management/v1/drone/{droneId}:
+    get:
+      tags:
+      - drone-management-service
+      operationId: getDrone
+      summary: Consulter un drone
+      parameters:
+      - $ref: '#/components/parameters/Drone_DroneId'
+      responses:
+        '200':
+          description: Drone du client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Drone_Drone'
+        '401':
+          $ref: '#/components/responses/Drone_Unauthorized'
+        '404':
+          $ref: '#/components/responses/Drone_NotFound'
+        '500':
+          $ref: '#/components/responses/Drone_InternalError'
+  /api/service-ordering/v1/serviceOrder:
+    post:
+      tags:
+      - service-ordering-service
+      operationId: placeServiceOrder
+      summary: Créer une commande de services pour un drone (UC-04)
+      description: 'Idempotente grâce à l''en-tête Idempotency-Key, propre à chaque client B2B. Avec la même clé et la même
+
+        demande, la commande existante est renvoyée (200). Avec la même clé et une autre demande, la réponse est 409.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/Ordering_IdempotencyKey'
+      - $ref: '#/components/parameters/Ordering_CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ordering_ServiceOrderCreate'
+            example:
+              orderItem:
+              - action: add
+                droneId: DRN-0231
+                service:
+                  serviceSpecification:
+                    id: SPEC-C2-URLLC
+              - action: add
+                droneId: DRN-0231
+                service:
+                  serviceSpecification:
+                    id: SPEC-IMAGERY-EMBB
+      responses:
+        '201':
+          description: Commande acceptée. L'activation de chaque élément est demandée.
+          headers:
+            Location:
+              schema:
+                type: string
+              example: /api/service-ordering/v1/serviceOrder/SO-1a2b3c4d5e6f
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ordering_ServiceOrder'
+        '200':
+          description: Rejeu identique, commande existante renvoyée.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ordering_ServiceOrder'
+        '400':
+          $ref: '#/components/responses/Ordering_BadRequest'
+        '401':
+          $ref: '#/components/responses/Ordering_Unauthorized'
+        '404':
+          description: Drone inexistant ou d'un autre client.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Ordering_Problem'
+        '409':
+          description: Clé d'idempotence réutilisée pour une autre demande, ou service déjà en cours d'activation ou actif
+            pour ce drone.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Ordering_Problem'
+        '422':
+          description: Commande vide, plusieurs drones, offre en double ou inconnue, action autre que add, drone non éligible.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Ordering_Problem'
+        '503':
+          $ref: '#/components/responses/Ordering_Unavailable'
+        '500':
+          $ref: '#/components/responses/Ordering_InternalError'
+  /api/service-ordering/v1/serviceOrder/{orderId}:
+    get:
+      tags:
+      - service-ordering-service
+      operationId: getServiceOrder
+      summary: Suivre une commande et l'état de chaque élément
+      description: 'Rafraîchit l''état des éléments auprès de slice-activation-service. S''il est indisponible,
+
+        la commande est renvoyée avec son dernier état connu.
+
+        '
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: SO-1a2b3c4d5e6f
+      responses:
+        '200':
+          description: Commande du client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ordering_ServiceOrder'
+        '401':
+          $ref: '#/components/responses/Ordering_Unauthorized'
+        '404':
+          description: Commande inexistante ou d'un autre client.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Ordering_Problem'
+        '500':
+          $ref: '#/components/responses/Ordering_InternalError'
+  /api/service-catalog/v1/serviceSpecification:
+    get:
+      tags:
+      - service-ordering-service
+      operationId: listServiceSpecifications
+      summary: Lister les offres du catalogue
+      responses:
+        '200':
+          description: Offres et caractéristiques.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ordering_ServiceSpecification'
+        '401':
+          $ref: '#/components/responses/Ordering_Unauthorized'
+  /api/slice-activation/v1/service:
+    get:
+      tags:
+      - slice-activation-service
+      operationId: searchServices
+      summary: Inventaire des services du client (filtre par commande)
+      parameters:
+      - name: orderId
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Services du client (au plus 200).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activation_Service'
+        '401':
+          $ref: '#/components/responses/Activation_Unauthorized'
+  /api/slice-activation/v1/service/{serviceId}:
+    get:
+      tags:
+      - slice-activation-service
+      operationId: getService
+      summary: Consulter l'état d'un service
+      parameters:
+      - name: serviceId
+        in: path
+        required: true
+        schema:
+          type: string
+        example: SVC-0a1b2c3d4e5f
+      responses:
+        '200':
+          description: Service du client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activation_Service'
+              example:
+                id: SVC-0a1b2c3d4e5f
+                state: ACTIVE
+                droneId: DRN-0231
+                orderId: SO-1a2b3c4d5e6f
+                orderItemId: SO-1a2b3c4d5e6f-1
+                serviceSpecification:
+                  id: SPEC-C2-URLLC
+                serviceCharacteristic:
+                - name: sst
+                  valueType: integer
+                  value: 2
+                acceptedAt: '2026-10-29T12:00:00.000Z'
+                activatedAt: '2026-10-29T12:00:00.912Z'
+                failureReason: null
+        '401':
+          $ref: '#/components/responses/Activation_Unauthorized'
+        '404':
+          $ref: '#/components/responses/Activation_NotFound'
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: Flux client credentials, sans utilisateur humain.
+      flows:
+        clientCredentials:
+          tokenUrl: http://localhost:8081/realms/candronex/protocol/openid-connect/token
+          scopes: {}
+  schemas:
+    Drone_DroneRegistration:
+      type: object
+      required:
+      - droneId
+      - imsi
+      - iccid
+      properties:
+        droneId:
+          type: string
+          pattern: ^[A-Za-z0-9-]{3,32}$
+          example: DRN-0231
+        imsi:
+          type: string
+          pattern: ^[0-9]{15}$
+          example: '302720000010231'
+        iccid:
+          type: string
+          pattern: ^[0-9]{19,20}$
+          example: '8930272000000010231'
+    Drone_Drone:
+      type: object
+      required:
+      - droneId
+      - status
+      - eligible
+      - imsi
+      - iccid
+      properties:
+        droneId:
+          type: string
+          example: DRN-0231
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - retired
+        eligible:
+          type: boolean
+          description: Le drone peut recevoir des services.
+        imsi:
+          type: string
+          description: IMSI masqué
+          example: 30272******0231
+        iccid:
+          type: string
+          description: ICCID masqué
+          example: 893027**********231
+    Drone_NetworkIdentity:
+      type: object
+      required:
+      - droneId
+      - imsi
+      - eligible
+      properties:
+        droneId:
+          type: string
+        imsi:
+          type: string
+          pattern: ^[0-9]{15}$
+        eligible:
+          type: boolean
+    Drone_Problem:
+      type: object
+      description: Format d'erreur uniforme (RFC 9457, application/problem+json).
+      required:
+      - type
+      - title
+      - status
+      - detail
+      - instance
+      properties:
+        type:
+          type: string
+          format: uri
+          example: https://candronex.example/problems/not-found
+        title:
+          type: string
+          example: Not Found
+        status:
+          type: integer
+          example: 404
+        detail:
+          type: string
+          example: Drone 'DRN-9999' not found.
+        instance:
+          type: string
+          example: /api/drone-management/v1/drone/DRN-9999
+        correlationId:
+          type: string
+    Ordering_ServiceOrderCreate:
+      type: object
+      required:
+      - orderItem
+      properties:
+        orderItem:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Ordering_ServiceOrderItemCreate'
+    Ordering_ServiceOrderItemCreate:
+      type: object
+      required:
+      - action
+      - droneId
+      - service
+      properties:
+        action:
+          type: string
+          enum:
+          - add
+          description: Seule l'action add est prise en charge en Phase 2.
+        droneId:
+          type: string
+          example: DRN-0231
+        service:
+          type: object
+          required:
+          - serviceSpecification
+          properties:
+            serviceSpecification:
+              $ref: '#/components/schemas/Ordering_SpecificationRef'
+    Ordering_SpecificationRef:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+          example: SPEC-C2-URLLC
+        name:
+          type: string
+          example: C2 Connectivity
+    Ordering_ServiceOrder:
+      type: object
+      required:
+      - id
+      - state
+      - acceptedAt
+      - orderItem
+      properties:
+        id:
+          type: string
+          example: SO-1a2b3c4d5e6f
+        state:
+          type: string
+          enum:
+          - ACKNOWLEDGED
+          - IN_PROGRESS
+          - COMPLETED
+          - PARTIALLY_COMPLETED
+          - FAILED
+          - CANCELLED
+          description: État global, calculé à partir de l'état des éléments.
+        acceptedAt:
+          type: string
+          format: date-time
+        orderItem:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ordering_ServiceOrderItem'
+    Ordering_ServiceOrderItem:
+      type: object
+      required:
+      - id
+      - action
+      - state
+      - droneId
+      - service
+      properties:
+        id:
+          type: string
+          example: SO-1a2b3c4d5e6f-1
+        action:
+          type: string
+          enum:
+          - add
+        state:
+          type: string
+          enum:
+          - PENDING
+          - ACTIVATING
+          - ACTIVE
+          - FAILED
+          - UNKNOWN
+          - CANCELLED
+        droneId:
+          type: string
+        service:
+          type: object
+          required:
+          - serviceSpecification
+          - serviceCharacteristic
+          properties:
+            id:
+              type: string
+              nullable: true
+              description: Identifiant du Service dans l'inventaire (null tant que l'activation n'a pas pu être demandée).
+              example: SVC-0a1b2c3d4e5f
+            serviceSpecification:
+              $ref: '#/components/schemas/Ordering_SpecificationRef'
+            serviceCharacteristic:
+              type: array
+              description: Caractéristiques figées au moment de la commande.
+              items:
+                $ref: '#/components/schemas/Ordering_Characteristic'
+    Ordering_Characteristic:
+      type: object
+      required:
+      - name
+      - valueType
+      - value
+      properties:
+        name:
+          type: string
+          example: sst
+        valueType:
+          type: string
+          enum:
+          - integer
+          - string
+        value:
+          oneOf:
+          - type: integer
+          - type: string
+          example: 2
+    Ordering_ServiceSpecification:
+      type: object
+      required:
+      - id
+      - name
+      - sliceType
+      - lifecycleStatus
+      - serviceSpecCharacteristic
+      properties:
+        id:
+          type: string
+          example: SPEC-C2-URLLC
+        name:
+          type: string
+          example: C2 Connectivity
+        sliceType:
+          type: string
+          enum:
+          - URLLC
+          - eMBB
+        lifecycleStatus:
+          type: string
+          enum:
+          - active
+          - retired
+        serviceSpecCharacteristic:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ordering_Characteristic'
+    Ordering_Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - detail
+      - instance
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        correlationId:
+          type: string
+    Activation_Characteristic:
+      type: object
+      required:
+      - name
+      - valueType
+      - value
+      properties:
+        name:
+          type: string
+          example: sst
+        valueType:
+          type: string
+          enum:
+          - integer
+          - string
+        value:
+          oneOf:
+          - type: integer
+          - type: string
+    Activation_ActivationRequest:
+      type: object
+      required:
+      - orderId
+      - orderItemId
+      - droneId
+      - serviceSpecification
+      - serviceCharacteristic
+      - acceptedAt
+      properties:
+        orderId:
+          type: string
+        orderItemId:
+          type: string
+        droneId:
+          type: string
+        serviceSpecification:
+          type: object
+          required:
+          - id
+          properties:
+            id:
+              type: string
+        serviceCharacteristic:
+          type: array
+          description: Doit contenir sliceType, sst, sd, dnn, 5qi, arp, ambrUplinkMbps, ambrDownlinkMbps.
+          items:
+            $ref: '#/components/schemas/Activation_Characteristic'
+        acceptedAt:
+          type: string
+          format: date-time
+          description: Acceptation de la commande (mesure du délai).
+    Activation_Service:
+      type: object
+      required:
+      - id
+      - state
+      - droneId
+      - orderId
+      - orderItemId
+      - serviceSpecification
+      - serviceCharacteristic
+      - acceptedAt
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - ACTIVATING
+          - ACTIVE
+          - FAILED
+          - UNKNOWN
+        droneId:
+          type: string
+        orderId:
+          type: string
+        orderItemId:
+          type: string
+        serviceSpecification:
+          type: object
+          properties:
+            id:
+              type: string
+        serviceCharacteristic:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activation_Characteristic'
+        acceptedAt:
+          type: string
+          format: date-time
+        activatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+          description: NETWORK_REJECTED quand le réseau refuse (état FAILED), NETWORK_TIMEOUT quand il ne répond pas après
+            3 essais (état UNKNOWN), INTERNAL_ERROR en cas d'erreur inattendue.
+    Activation_Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - detail
+      - instance
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        correlationId:
+          type: string
+  parameters:
+    Drone_DroneId:
+      name: droneId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9-]{3,32}$
+      example: DRN-0231
+    Drone_CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9._-]{1,128}$
+      description: Repris dans les journaux et renvoyé dans la réponse. Le service en génère un s'il est absent.
+    Ordering_IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: inspectra-2026-10-29-0001
+    Ordering_CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9._-]{1,128}$
+  responses:
+    Drone_BadRequest:
+      description: Requête mal formée (JSON illisible, champ manquant ou de mauvais type).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Drone_Problem'
+          example:
+            type: https://candronex.example/problems/bad-request
+            title: Bad Request
+            status: 400
+            detail: Field 'imsi' is required and must be a str.
+            instance: /api/drone-management/v1/drone
+    Drone_Unauthorized:
+      description: Jeton absent, expiré, mal signé, d'un autre émetteur ou sans l'audience candronex-api.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Drone_Problem'
+    Drone_NotFound:
+      description: Drone inexistant ou appartenant à un autre client. La réponse est la même dans les deux cas, pour ne rien
+        divulguer.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Drone_Problem'
+    Drone_BusinessRule:
+      description: Requête bien formée mais refusée par une règle du domaine (ex. IMSI de 14 chiffres).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Drone_Problem'
+          example:
+            type: https://candronex.example/problems/invalid-value
+            title: Invalid Value
+            status: 422
+            detail: IMSI must be a 15-digit numeric string.
+            instance: /api/drone-management/v1/drone
+    Drone_InternalError:
+      description: Erreur inattendue.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Drone_Problem'
+    Ordering_BadRequest:
+      description: Requête mal formée (JSON illisible, champ manquant, Idempotency-Key absente).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Ordering_Problem'
+    Ordering_Unauthorized:
+      description: Jeton absent ou invalide.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Ordering_Problem'
+    Ordering_Unavailable:
+      description: drone-management-service ne répond pas à temps. Aucune commande n'est créée.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Ordering_Problem'
+    Ordering_InternalError:
+      description: Erreur inattendue.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Ordering_Problem'
+    Activation_BadRequest:
+      description: Requête mal formée.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Activation_Problem'
+    Activation_Unauthorized:
+      description: Jeton absent ou invalide.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Activation_Problem'
+    Activation_NotFound:
+      description: Service ou drone inexistant, ou appartenant à un autre client.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Activation_Problem'

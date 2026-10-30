@@ -1,5 +1,3 @@
-flask
-sqlalchemy
-pymysql
-cryptography
+-r services/drone-management-service/requirements.txt
 pytest
+pyyaml

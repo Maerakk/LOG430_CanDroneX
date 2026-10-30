@@ -1,0 +1,58 @@
+@startuml
+!pragma layout smetana
+title slice-activation-service - architecture hexagonale
+skinparam componentStyle rectangle
+package "adapter/inbound" #E8F4FF {
+  component "rest.py (Flask)" as rest
+}
+package "domain" #FFF0F0 {
+  package "port/inbound" #FFFFCC {
+    rectangle "RequestActivationUseCase" as pra
+    rectangle "ActivateServiceUseCase" as pas
+    rectangle "InventoryQueryUseCase" as piq
+  }
+  component "Service (agrégat)\nServiceState\nNetworkConfiguration" as model
+  package "port/outbound" #FFFFCC {
+    rectangle "NetworkProvisioningPort" as npp
+    rectangle "ServiceInventory" as inv
+    rectangle "DroneIdentityProvider" as dip
+    rectangle "ActivationScheduler" as asp
+  }
+}
+package "application" #FFFFE0 {
+  component "RequestActivation" as ra
+  component "ActivateService" as act
+  component "InventoryQueries" as iq
+}
+package "adapter/outbound" #E8FFE8 {
+  component "MockOpen5GSAdapter\n(latence, échecs, délais)" as mock
+  component "Open5GSAdapter\n(Phase 3)" as real #DDDDDD
+  component "SqlServiceInventory\n(MySQL, compare-and-set)" as sql
+  component "HttpDroneIdentityProvider" as http
+  component "ThreadPoolActivationScheduler" as sched
+}
+rest --> pra
+rest --> piq
+ra ..|> pra
+act ..|> pas
+iq ..|> piq
+ra --> model
+act --> model
+ra --> inv
+ra --> dip
+ra --> asp
+act --> npp
+act --> inv
+mock ..|> npp
+real ..|> npp
+sql ..|> inv
+http ..|> dip
+sched ..|> asp
+sched --> pas : lance en arrière-plan
+legend right
+  Jaune : ports définis par le domaine.
+  Pointillé à tête creuse : implémente le port.
+  Remplacer le mock par Open5GSAdapter ne change
+  que main.py (racine de composition).
+endlegend
+@enduml

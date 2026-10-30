@@ -1,0 +1,471 @@
+{
+  "window": {
+    "start": "2026-10-30 02:44:01.128741",
+    "end": "2026-10-30 02:50:10.173200"
+  },
+  "load": {
+    "LOAD_RATE": "600",
+    "LOAD_RAMP": "1m",
+    "LOAD_STEADY": "5m"
+  },
+  "environment": {
+    "dockerCpus": 20,
+    "dockerMemoryGiB": 15.5,
+    "dockerOS": "Docker Desktop (containerized)",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "mock": {
+      "MOCK_LATENCY_MIN_MS": "300",
+      "MOCK_LATENCY_MAX_MS": "1500",
+      "MOCK_FAILURE_RATE": "0",
+      "MOCK_TIMEOUT_RATE": "0"
+    }
+  },
+  "throughput": {
+    "iterations": 195470,
+    "iterationsPerSecondAvg": 535.7,
+    "droppedIterations": 2529,
+    "httpErrorRate": 0.28298833422397884,
+    "httpDurationMs": {
+      "max": 5162.9,
+      "avg": 1076.2,
+      "med": 411.4,
+      "p(90)": 4505.4,
+      "p(95)": 4514.4,
+      "p(99)": 4542.8
+    },
+    "thresholdsPassed": false
+  },
+  "activation": {
+    "ordered_items": "46026",
+    "received_items": "45480",
+    "active_items": "45480",
+    "not_finished_items": "0",
+    "failed_items": "0",
+    "p95_rank": "43725",
+    "p95_delay_ms": "3389.2060",
+    "avg_delay_ms": "2097",
+    "max_delay_ms": "12837.5670"
+  },
+  "queueSamples": [
+    {
+      "ts": "2026-10-30 02:44:06",
+      "pending": 0,
+      "activating": 21,
+      "active": 39,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:12",
+      "pending": 0,
+      "activating": 54,
+      "active": 246,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:17",
+      "pending": 5,
+      "activating": 81,
+      "active": 646,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:23",
+      "pending": 8,
+      "activating": 114,
+      "active": 1227,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:29",
+      "pending": 13,
+      "activating": 149,
+      "active": 2001,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:35",
+      "pending": 21,
+      "activating": 166,
+      "active": 2981,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:41",
+      "pending": 59,
+      "activating": 189,
+      "active": 3982,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:47",
+      "pending": 46,
+      "activating": 214,
+      "active": 4979,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:52",
+      "pending": 39,
+      "activating": 205,
+      "active": 6008,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:44:58",
+      "pending": 56,
+      "activating": 209,
+      "active": 6997,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:04",
+      "pending": 36,
+      "activating": 154,
+      "active": 7898,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:10",
+      "pending": 43,
+      "activating": 195,
+      "active": 8712,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:16",
+      "pending": 59,
+      "activating": 170,
+      "active": 9660,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:22",
+      "pending": 36,
+      "activating": 151,
+      "active": 10645,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:28",
+      "pending": 48,
+      "activating": 144,
+      "active": 11446,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:34",
+      "pending": 16,
+      "activating": 154,
+      "active": 12316,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:40",
+      "pending": 27,
+      "activating": 204,
+      "active": 13141,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:46",
+      "pending": 9,
+      "activating": 201,
+      "active": 13987,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:51",
+      "pending": 36,
+      "activating": 179,
+      "active": 14862,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:45:57",
+      "pending": 25,
+      "activating": 169,
+      "active": 15782,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:03",
+      "pending": 49,
+      "activating": 170,
+      "active": 16619,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:09",
+      "pending": 25,
+      "activating": 209,
+      "active": 17472,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:15",
+      "pending": 55,
+      "activating": 181,
+      "active": 18431,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:21",
+      "pending": 52,
+      "activating": 190,
+      "active": 19387,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:27",
+      "pending": 33,
+      "activating": 175,
+      "active": 20029,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:33",
+      "pending": 27,
+      "activating": 120,
+      "active": 20861,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:40",
+      "pending": 17,
+      "activating": 129,
+      "active": 21398,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:46",
+      "pending": 21,
+      "activating": 107,
+      "active": 22196,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:52",
+      "pending": 42,
+      "activating": 157,
+      "active": 22926,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:46:58",
+      "pending": 21,
+      "activating": 121,
+      "active": 23650,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:04",
+      "pending": 31,
+      "activating": 137,
+      "active": 24293,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:10",
+      "pending": 39,
+      "activating": 132,
+      "active": 24957,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:15",
+      "pending": 49,
+      "activating": 137,
+      "active": 25861,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:21",
+      "pending": 27,
+      "activating": 194,
+      "active": 26764,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:28",
+      "pending": 35,
+      "activating": 147,
+      "active": 27651,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:34",
+      "pending": 25,
+      "activating": 158,
+      "active": 28473,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:40",
+      "pending": 15,
+      "activating": 117,
+      "active": 29151,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:48",
+      "pending": 23,
+      "activating": 106,
+      "active": 29906,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:47:54",
+      "pending": 23,
+      "activating": 116,
+      "active": 30571,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:00",
+      "pending": 35,
+      "activating": 174,
+      "active": 31330,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:06",
+      "pending": 15,
+      "activating": 168,
+      "active": 32184,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:12",
+      "pending": 42,
+      "activating": 155,
+      "active": 32980,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:18",
+      "pending": 30,
+      "activating": 111,
+      "active": 33753,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:25",
+      "pending": 24,
+      "activating": 126,
+      "active": 34590,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:32",
+      "pending": 27,
+      "activating": 138,
+      "active": 35281,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:39",
+      "pending": 12,
+      "activating": 123,
+      "active": 36098,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:48",
+      "pending": 4,
+      "activating": 49,
+      "active": 36821,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:48:54",
+      "pending": 14,
+      "activating": 105,
+      "active": 37339,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:01",
+      "pending": 26,
+      "activating": 132,
+      "active": 38149,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:08",
+      "pending": 10,
+      "activating": 94,
+      "active": 38841,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:14",
+      "pending": 20,
+      "activating": 127,
+      "active": 39318,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:20",
+      "pending": 19,
+      "activating": 111,
+      "active": 40042,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:27",
+      "pending": 16,
+      "activating": 120,
+      "active": 40698,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:33",
+      "pending": 23,
+      "activating": 108,
+      "active": 41452,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:39",
+      "pending": 27,
+      "activating": 125,
+      "active": 42116,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:46",
+      "pending": 11,
+      "activating": 110,
+      "active": 42865,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:52",
+      "pending": 12,
+      "activating": 100,
+      "active": 43473,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:49:59",
+      "pending": 7,
+      "activating": 70,
+      "active": 43950,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:50:05",
+      "pending": 40,
+      "activating": 162,
+      "active": 44565,
+      "failed": 0
+    },
+    {
+      "ts": "2026-10-30 02:50:11",
+      "pending": 33,
+      "activating": 151,
+      "active": 45370,
+      "failed": 0
+    }
+  ]
+}

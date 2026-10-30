@@ -1,0 +1,60 @@
+@startuml
+!pragma layout smetana
+title Modele logique des donnees - une base par service
+hide circle
+package "drone-db (drone-management-service)" {
+  entity drone {
+    * id <<PK>>
+    client_id
+    drone_id
+    imsi <<UNIQUE>>
+    iccid <<UNIQUE>>
+    status
+    created_at
+    --
+    UNIQUE (client_id, drone_id)
+  }
+}
+package "ordering-db (service-ordering-service)" {
+  entity service_specification {
+    * id <<PK>>
+    name, slice_type, lifecycle_status
+  }
+  entity service_spec_characteristic {
+    * specification_id <<PK, FK>>
+    * name <<PK>>
+    position, value_type, value
+  }
+  entity service_order {
+    * order_id <<PK>>
+    client_id, idempotency_key, accepted_at
+    --
+    UNIQUE (client_id, idempotency_key)
+  }
+  entity service_order_item {
+    * item_id <<PK>>
+    order_id <<FK>>
+    client_id, action, drone_id
+    specification_id, specification_name
+    characteristics (JSON, copie figee)
+    service_id, state
+    --
+    UNIQUE (order_id, specification_id)
+  }
+  service_specification ||--o{ service_spec_characteristic
+  service_order ||--|{ service_order_item
+}
+package "activation-db (slice-activation-service)" {
+  entity service {
+    * service_id <<PK>>
+    client_id, order_id
+    order_item_id <<UNIQUE>>
+    drone_id, imsi
+    specification_id, characteristics (JSON)
+    state, attempts, failure_reason
+    accepted_at, activated_at
+  }
+}
+service_order_item ..> drone : drone_id (sans cle etrangere)
+service_order_item ..> service : service_id / order_item_id (sans cle etrangere)
+@enduml
