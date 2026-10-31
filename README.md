@@ -22,7 +22,7 @@ flowchart LR
 
 ## Démarrer
 
-Copier `.env.example` en `.env` (valeurs de démo), puis :
+Copier `.env.example` en `.env` (les valeurs `changez-moi` suffisent en local), puis :
 
 ```bash
 docker compose up --build

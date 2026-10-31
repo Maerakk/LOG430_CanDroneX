@@ -1,6 +1,5 @@
 from candronex_common.errors import ServiceUnavailableError
 from candronex_common.http_client import ServiceClient
-from service_ordering.ordering.adapter.inbound.rest import iso
 from service_ordering.ordering.domain.port.outbound import (ActivationRequest, ActivationStatus, DroneDirectory,
                                                             DroneReference, ServiceActivation)
 from service_ordering.ordering.domain.states import ItemState
@@ -37,7 +36,7 @@ class HttpServiceActivation(ServiceActivation):
             "serviceSpecification": {"id": request.specification_id},
             "serviceCharacteristic": [{"name": c.name, "valueType": c.value_type, "value": c.value}
                                       for c in request.characteristics],
-            "acceptedAt": iso(request.accepted_at),
+            "acceptedAt": request.accepted_at.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
         })
         if r.status_code not in (200, 202):
             raise ServiceUnavailableError(f"slice-activation-service refused the request ({r.status_code}).")
