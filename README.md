@@ -22,7 +22,7 @@ flowchart LR
 
 ## Démarrer
 
-Copier `.env.example` en `.env` et remplir les mots de passe et les secrets, puis :
+Copier `.env.example` en `.env` (valeurs de démo), puis :
 
 ```bash
 docker compose up --build
